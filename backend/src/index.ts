@@ -20,7 +20,7 @@ app.use(express.json());
 
 // Health Check
 app.get("/health", (req, res) => {
-  res.json({ status: "OK", timestamp: new Date() });
+  res.json({ status: "OK", version: "1.0.0", env: process.env.NODE_ENV, timestamp: new Date() });
 });
 
 // Routes
