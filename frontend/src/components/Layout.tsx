@@ -33,8 +33,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Terminal size={20} />
             </div>
             <div>
-              <span className="font-bold text-white tracking-wide font-mono block">
-                AZ <span className="text-emeraldAccent">PRACTICE</span>
+              <span className="font-bold text-white tracking-wide font-mono block animate-pulse">
+                SHAH <span className="text-emeraldAccent">LMS</span>
               </span>
               <span className="text-[10px] text-textMuted font-mono">v1.0.0</span>
             </div>

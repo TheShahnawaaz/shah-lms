@@ -45,9 +45,9 @@ export const Login: React.FC = () => {
             <Terminal size={32} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white font-mono">
-            ALGO<span className="text-emeraldAccent">ZENITH</span>
+            SHAH<span className="text-emeraldAccent">LMS</span>
           </h1>
-          <p className="text-textMuted text-sm mt-1">Practice & Editorial Platform</p>
+          <p className="text-textMuted text-sm mt-1">Learning & Practice Arena</p>
         </div>
 
         {error && (

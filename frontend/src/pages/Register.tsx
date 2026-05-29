@@ -52,9 +52,9 @@ export const Register: React.FC = () => {
             <Terminal size={32} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white font-mono">
-            CREATE <span className="text-emeraldAccent">ACCOUNT</span>
+            SHAH<span className="text-emeraldAccent">LMS</span>
           </h1>
-          <p className="text-textMuted text-sm mt-1">Get started with AlgoZenith Practice</p>
+          <p className="text-textMuted text-sm mt-1">Register for Learning & Practice</p>
         </div>
 
         {error && (
