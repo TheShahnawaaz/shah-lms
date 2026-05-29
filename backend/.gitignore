@@ -1,0 +1,16 @@
+# Dependency directories
+node_modules/
+
+# Production build outputs
+dist/
+
+# Local env files / secrets
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# System files
+.DS_Store

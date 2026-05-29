@@ -1,0 +1,62 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Problem {
+  id              Int            @id
+  title           String
+  body            String         // Markdown containing LaTeX
+  inputFormat     String
+  outputFormat    String
+  constraints     String
+  difficulty      Int            // 1=Easy, 2=Medium, 3=Hard, etc.
+  memoryLimitMb   Int
+  timeLimitSec    Float
+  note            String?
+  samples         Json           // Array of sample inputs/outputs/explanations
+  hints           Json           // Hints mapping (hint1, hint2, solution_approach)
+  videoEditorialId String?
+  status          String
+  hash            String?        // MD5 hash of the raw scraper JSON file for change tracking
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  tags            Tag[]          @relation("ProblemTags")
+  editorials      Editorial[]
+  templates       TemplateCode[]
+}
+
+model Tag {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  problems Problem[] @relation("ProblemTags")
+}
+
+model Editorial {
+  id        String   @id @default(uuid())
+  problemId Int
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  code      String
+  language  String
+}
+
+model TemplateCode {
+  id        String   @id @default(uuid())
+  problemId Int
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  code      String
+  language  String
+}
