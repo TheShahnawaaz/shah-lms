@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            cd /var/www/shah-lms/platform/backend
+            cd /home/ubuntu/shah-lms/backend
             git pull origin main
             npm install
             npx prisma db push
