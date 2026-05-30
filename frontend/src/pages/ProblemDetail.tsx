@@ -115,6 +115,7 @@ export const ProblemDetail: React.FC = () => {
 
   // Tab selections
   const [activeLeftTab, setActiveLeftTab] = useState<"desc" | "hints" | "editorial">("desc");
+  const [activeMobilePane, setActiveMobilePane] = useState<"desc" | "editor">("desc");
   const [activeEditorialLang, setActiveEditorialLang] = useState<string>("");
   const [editorLang, setEditorLang] = useState<string>("C++14");
   const [editorCode, setEditorCode] = useState<string>("");
@@ -462,11 +463,35 @@ export const ProblemDetail: React.FC = () => {
         </div>
       </header>
 
+      {/* Mobile Split View Navigation Tabs */}
+      <div className="flex border-b border-border bg-card shrink-0 lg:hidden relative z-30">
+        <button
+          onClick={() => setActiveMobilePane("desc")}
+          className={`flex-1 py-3 text-center text-xs font-semibold border-b-2 transition-all ${
+            activeMobilePane === "desc"
+              ? "border-primary text-foreground bg-background/30"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/10"
+          }`}
+        >
+          Problem Description
+        </button>
+        <button
+          onClick={() => setActiveMobilePane("editor")}
+          className={`flex-1 py-3 text-center text-xs font-semibold border-b-2 transition-all ${
+            activeMobilePane === "editor"
+              ? "border-primary text-foreground bg-background/30"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/10"
+          }`}
+        >
+          Code Editor & Console
+        </button>
+      </div>
+
       {/* Main Split View Area */}
-      <div className="flex-1 flex min-h-0 w-full overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0 w-full overflow-hidden">
         
         {/* Left Pane: Descriptions & Editorials */}
-        <div className="w-1/2 flex flex-col border-r border-border h-full overflow-hidden bg-background">
+        <div className={`w-full lg:w-1/2 flex flex-col border-r border-border h-full overflow-hidden bg-background ${activeMobilePane === "desc" ? "flex" : "hidden lg:flex"}`}>
           {/* Custom Description Tabs */}
           <div className="flex border-b border-border bg-card shrink-0">
             {[
@@ -750,7 +775,7 @@ export const ProblemDetail: React.FC = () => {
       </div>
 
         {/* Right Pane: Code Editor & Console */}
-        <div className="w-1/2 flex flex-col h-full overflow-hidden bg-card">
+        <div className={`w-full lg:w-1/2 flex flex-col h-full overflow-hidden bg-card ${activeMobilePane === "editor" ? "flex" : "hidden lg:flex"}`}>
           
           {/* Monaco Editor Wrapper - grows dynamically */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">

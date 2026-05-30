@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Code2, Settings, LogOut, ChevronsUpDown, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Code2, Settings, LogOut, ChevronsUpDown, Users, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 function parseJwt(token: string) {
@@ -24,12 +26,22 @@ function parseJwt(token: string) {
   }
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse, mobileOpen = false, onCloseMobile }) => {
   const [footerOpen, setFooterOpen] = useState(false);
   const [isHeaderHovered, setIsHeaderHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const footerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const token = localStorage.getItem("az_auth_token");
   const payload = token ? parseJwt(token) : null;
@@ -87,19 +99,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
 
   return (
     <motion.aside
-      initial={{ width: isCollapsed ? 68 : 240 }}
-      animate={{ width: isCollapsed ? 68 : 240 }}
+      initial={false}
+      animate={{ width: isMobile ? 240 : (isCollapsed ? 68 : 240) }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
       onClick={handleSidebarClick}
-      className={`h-screen bg-card border-r border-border flex flex-col flex-shrink-0 z-30 select-none ${
-        isCollapsed ? "cursor-pointer" : ""
-      }`}
+      className={`fixed inset-y-0 left-0 lg:static z-50 lg:z-30 h-screen bg-card border-r border-border flex flex-col flex-shrink-0 select-none transition-transform lg:transition-none duration-300 lg:transform-none ${
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      } ${isCollapsed && !isMobile ? "lg:cursor-pointer" : ""}`}
     >
       {/* Sidebar Header / Branding */}
       <div className="flex items-center justify-between p-4 h-16 border-b border-border">
-        {!isCollapsed ? (
+        {!isCollapsed || isMobile ? (
           <>
-            <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
+            <Link to="/dashboard" onClick={onCloseMobile} className="flex items-center gap-2 min-w-0">
               {/* Custom geometric logo badge */}
               <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-base flex-shrink-0 shadow-sm border border-border">
                 S
@@ -109,16 +121,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
                 <span className="text-[10px] text-muted-foreground font-medium truncate">Admin Panel</span>
               </div>
             </Link>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleCollapse();
-              }}
-              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border/40"
-              title="Collapse sidebar"
-            >
-              <ChevronLeft size={16} />
-            </button>
+            {isMobile ? (
+              <button
+                onClick={onCloseMobile}
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border/40 lg:hidden"
+                title="Close menu"
+              >
+                <X size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleCollapse();
+                }}
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border/40"
+                title="Collapse sidebar"
+              >
+                <ChevronLeft size={16} />
+              </button>
+            )}
           </>
         ) : (
           <div
@@ -166,12 +188,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
                     <Link
                       key={item.path}
                       to={item.path}
+                      onClick={onCloseMobile}
                       className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${
                         isActive
-                          ? "bg-primary text-primary-foreground font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      } ${isCollapsed ? "justify-center" : ""}`}
-                      title={isCollapsed ? item.name : undefined}
+                           ? "bg-primary text-primary-foreground font-medium"
+                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      } ${isCollapsed && !isMobile ? "justify-center" : ""}`}
+                      title={isCollapsed && !isMobile ? item.name : undefined}
                     >
                       <Icon size={18} className="flex-shrink-0" />
                       {!isCollapsed && (

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Sidebar } from "./Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Sun, Moon, LogOut } from "lucide-react";
+import { ChevronRight, Sun, Moon, LogOut, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 
 interface LayoutProps {
@@ -28,6 +28,7 @@ function parseJwt(token: string) {
 
 export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -85,9 +86,27 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground transition-colors duration-300 relative">
       {/* Sidebar - collapsible state is managed here */}
-      <Sidebar isCollapsed={isCollapsed} onToggleCollapse={() => setIsCollapsed(!isCollapsed)} />
+      <Sidebar 
+        isCollapsed={isCollapsed} 
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)} 
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
+      />
+
+      {/* Mobile menu backdrop */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.4 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 bg-black z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
 
       {/* Main container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -96,6 +115,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
         {!fullWidth && (
           <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
             <div className="flex items-center gap-3 min-w-0">
+              {/* Hamburger menu for mobile */}
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="p-2 -ml-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 lg:hidden flex-shrink-0"
+                title="Open menu"
+              >
+                <Menu size={20} />
+              </button>
+
               {/* Breadcrumbs */}
               <nav className="hidden sm:flex items-center gap-1.5 text-sm font-medium min-w-0">
                 {breadcrumbs.map((crumb, idx) => {

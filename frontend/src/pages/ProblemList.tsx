@@ -366,14 +366,14 @@ export const ProblemList: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-xl border-0 md:border border-border bg-transparent md:bg-card md:shadow-sm overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground bg-card rounded-xl border border-border md:border-0">
             <div className="w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin mb-4"></div>
             <span className="text-sm">Loading problems...</span>
           </div>
         ) : problems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground bg-card rounded-xl border border-border md:border-0">
             <span className="text-sm mb-4">No problems match your filters.</span>
             <button
               onClick={() => setSearchParams({})}
@@ -383,61 +383,115 @@ export const ProblemList: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="px-6 py-3 font-medium text-muted-foreground w-16">ID</th>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Title</th>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Difficulty</th>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Topics</th>
-                  <th className="px-6 py-3 font-medium text-muted-foreground text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {problems.map((problem) => (
-                  <tr key={problem.id} className="hover:bg-muted/30 transition-colors group">
-                    <td className="px-6 py-4 text-muted-foreground font-mono">{problem.id}</td>
-                    <td className="px-6 py-4">
-                      <Link to={`/problems/${problem.id}`} className="font-medium text-foreground group-hover:text-primary transition-colors">
+          <>
+            {/* Mobile Card List View (Visible on mobile, hidden on desktop) */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+              {problems.map((problem) => (
+                <div key={problem.id} className="p-4 rounded-xl border border-border bg-card shadow-sm flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-muted-foreground font-semibold px-1.5 py-0.5 rounded bg-muted/60">
+                          #{problem.id}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getDifficultyColor(problem.difficulty)}`}>
+                          {getDifficultyLabel(problem.difficulty)}
+                        </span>
+                      </div>
+                      <Link to={`/problems/${problem.id}`} className="font-bold text-sm text-foreground hover:text-primary transition-colors block truncate">
                         {problem.title}
                       </Link>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-0.5 rounded-md text-xs font-medium border ${getDifficultyColor(problem.difficulty)}`}>
-                        {getDifficultyLabel(problem.difficulty)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1.5 max-w-[250px] truncate">
-                        {problem.tags.slice(0, 3).map((t, idx) => (
-                          <span
-                            key={idx}
-                            onClick={() => updateFilters({ tag: t.name })}
-                            className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[10px] cursor-pointer hover:bg-foreground hover:text-background transition-colors"
-                          >
-                            {t.name}
-                          </span>
-                        ))}
-                        {problem.tags.length > 3 && (
-                          <span className="text-[10px] text-muted-foreground align-middle">+{problem.tags.length - 3}</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Link
-                        to={`/problems/${problem.id}`}
-                        className="inline-flex items-center justify-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                        title="Solve Problem"
-                      >
-                        <Eye size={16} />
-                      </Link>
-                    </td>
+                    </div>
+                    
+                    <Link
+                      to={`/problems/${problem.id}`}
+                      className="flex items-center justify-center size-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-colors shrink-0 shadow-sm"
+                      title="Solve Problem"
+                    >
+                      <Eye size={15} />
+                    </Link>
+                  </div>
+
+                  {/* Topic Tags */}
+                  {problem.tags && problem.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 border-t border-border/40 pt-2.5">
+                      {problem.tags.slice(0, 3).map((t, idx) => (
+                        <span
+                          key={idx}
+                          onClick={() => updateFilters({ tag: t.name })}
+                          className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[10px] cursor-pointer hover:bg-foreground hover:text-background transition-colors"
+                        >
+                          {t.name}
+                        </span>
+                      ))}
+                      {problem.tags.length > 3 && (
+                        <span className="text-[10px] text-muted-foreground pt-0.5 font-medium align-middle">
+                          +{problem.tags.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View (Hidden on mobile, visible on desktop) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="px-6 py-3 font-medium text-muted-foreground w-16">ID</th>
+                    <th className="px-6 py-3 font-medium text-muted-foreground">Title</th>
+                    <th className="px-6 py-3 font-medium text-muted-foreground">Difficulty</th>
+                    <th className="px-6 py-3 font-medium text-muted-foreground">Topics</th>
+                    <th className="px-6 py-3 font-medium text-muted-foreground text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {problems.map((problem) => (
+                    <tr key={problem.id} className="hover:bg-muted/30 transition-colors group">
+                      <td className="px-6 py-4 text-muted-foreground font-mono">{problem.id}</td>
+                      <td className="px-6 py-4">
+                        <Link to={`/problems/${problem.id}`} className="font-medium text-foreground group-hover:text-primary transition-colors">
+                          {problem.title}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 rounded-md text-xs font-medium border ${getDifficultyColor(problem.difficulty)}`}>
+                          {getDifficultyLabel(problem.difficulty)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1.5 max-w-[250px] truncate">
+                          {problem.tags.slice(0, 3).map((t, idx) => (
+                            <span
+                              key={idx}
+                              onClick={() => updateFilters({ tag: t.name })}
+                              className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[10px] cursor-pointer hover:bg-foreground hover:text-background transition-colors"
+                            >
+                              {t.name}
+                            </span>
+                          ))}
+                          {problem.tags.length > 3 && (
+                            <span className="text-[10px] text-muted-foreground align-middle">+{problem.tags.length - 3}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          to={`/problems/${problem.id}`}
+                          className="inline-flex items-center justify-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                          title="Solve Problem"
+                        >
+                          <Eye size={16} />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
