@@ -1,12 +1,12 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ProblemList from "./pages/ProblemList";
 import ProblemDetail from "./pages/ProblemDetail";
-import AdminLayout from "./pages/admin/AdminLayout";
 import SeedPage from "./pages/admin/SeedPage";
+import AllowedUsers from "./pages/admin/AllowedUsers";
+import { Layout } from "./components/Layout";
 
 // Helper component for Route protection
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -23,14 +23,15 @@ export const App: React.FC = () => {
       <Routes>
         {/* Public Auth Routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
 
         {/* Private Routes */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Layout>
+                <Dashboard />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -38,7 +39,9 @@ export const App: React.FC = () => {
           path="/problems"
           element={
             <ProtectedRoute>
-              <ProblemList />
+              <Layout>
+                <ProblemList />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -46,7 +49,9 @@ export const App: React.FC = () => {
           path="/problems/:id"
           element={
             <ProtectedRoute>
-              <ProblemDetail />
+              <Layout fullWidth={true}>
+                <ProblemDetail />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -55,9 +60,21 @@ export const App: React.FC = () => {
         <Route
           path="/admin/seed"
           element={
-            <AdminLayout>
-              <SeedPage />
-            </AdminLayout>
+            <ProtectedRoute>
+              <Layout>
+                <SeedPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AllowedUsers />
+              </Layout>
+            </ProtectedRoute>
           }
         />
 

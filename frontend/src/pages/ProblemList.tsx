@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../lib/api";
-import Layout from "../components/Layout";
-import { Search, Tag as TagIcon, ArrowLeft, ArrowRight, Eye } from "lucide-react";
+import { Search, Tag as TagIcon, ArrowLeft, ArrowRight, Eye, Filter } from "lucide-react";
 
 interface ProblemSummary {
   id: number;
@@ -30,13 +29,11 @@ export const ProblemList: React.FC = () => {
     totalPages: 1
   });
 
-  // Read search filters from URL query parameters
   const page = parseInt(searchParams.get("page") || "1");
   const search = searchParams.get("search") || "";
   const difficulty = searchParams.get("difficulty") || "";
   const selectedTag = searchParams.get("tag") || "";
 
-  // Temporary local state for search inputs
   const [searchInput, setSearchInput] = useState(search);
 
   useEffect(() => {
@@ -83,7 +80,6 @@ export const ProblemList: React.FC = () => {
       }
     });
 
-    // Reset page to 1 on filter update
     if (!newFilters.page) {
       updatedParams.delete("page");
     }
@@ -96,189 +92,185 @@ export const ProblemList: React.FC = () => {
     updateFilters({ search: searchInput });
   };
 
-  const getDifficultyBadge = (level: number) => {
+  const getDifficultyColor = (level: number) => {
     switch (level) {
-      case 1:
-        return <span className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emeraldAccent border border-emeraldAccent/15">Easy</span>;
-      case 2:
-        return <span className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/15">Medium</span>;
-      case 3:
-        return <span className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-orange-500/10 text-orange-500 border border-orange-500/15">Hard</span>;
-      default:
-        return <span className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-500 border border-red-500/15">Harder</span>;
+      case 1: return "text-emerald-500 bg-emerald-500/10 border-emerald-500/20";
+      case 2: return "text-amber-500 bg-amber-500/10 border-amber-500/20";
+      case 3: return "text-red-500 bg-red-500/10 border-red-500/20";
+      default: return "text-purple-500 bg-purple-500/10 border-purple-500/20";
+    }
+  };
+
+  const getDifficultyLabel = (level: number) => {
+    switch (level) {
+      case 1: return "Easy";
+      case 2: return "Medium";
+      case 3: return "Hard";
+      default: return "Harder";
     }
   };
 
   return (
-    <Layout>
-      <div className="p-8 max-w-6xl mx-auto space-y-6 w-full">
-        {/* Header */}
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white font-mono">
-            PROBLEM <span className="text-emeraldAccent">ARENA</span>
-          </h1>
-          <p className="text-textMuted">Solve compiled DSA tasks, explore editorials, and improve your skills.</p>
-        </div>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Problems</h1>
+        <p className="text-sm text-muted-foreground">Solve tasks, explore editorials, and improve your skills.</p>
+      </div>
 
-        {/* Filter Controls Panel */}
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search Box */}
-            <form onSubmit={handleSearchSubmit} className="md:col-span-2 relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-textMuted pointer-events-none">
-                <Search size={16} />
-              </span>
-              <input
-                type="text"
-                placeholder="Search problems by name..."
-                className="w-full glass-input rounded-xl py-2.5 pl-10 pr-4 text-sm text-white"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
-            </form>
+      {/* Filters */}
+      <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <form onSubmit={handleSearchSubmit} className="relative flex-1 w-full">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+            <Search size={16} />
+          </span>
+          <input
+            type="text"
+            placeholder="Search problems..."
+            className="w-full bg-background border border-input rounded-md py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </form>
 
-            {/* Tag Filter */}
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-textMuted pointer-events-none">
-                <TagIcon size={16} />
-              </span>
-              <select
-                className="w-full glass-input rounded-xl py-2.5 pl-10 pr-4 text-sm text-white appearance-none cursor-pointer bg-card font-semibold"
-                value={selectedTag}
-                onChange={(e) => updateFilters({ tag: e.target.value })}
-              >
-                <option value="">All Topics</option>
-                {tags.map((tag) => (
-                  <option key={tag.id} value={tag.name}>
-                    {tag.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:flex-none md:w-48">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground pointer-events-none">
+              <TagIcon size={16} />
+            </span>
+            <select
+              className="w-full bg-background border border-input rounded-md py-2 pl-9 pr-8 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring transition-all"
+              value={selectedTag}
+              onChange={(e) => updateFilters({ tag: e.target.value })}
+            >
+              <option value="">All Topics</option>
+              {tags.map((tag) => (
+                <option key={tag.id} value={tag.name}>{tag.name}</option>
+              ))}
+            </select>
+          </div>
 
-            {/* Difficulty Filter */}
-            <div>
-              <select
-                className="w-full glass-input rounded-xl py-2.5 px-4 text-sm text-white appearance-none cursor-pointer bg-card font-semibold"
-                value={difficulty}
-                onChange={(e) => updateFilters({ difficulty: e.target.value })}
-              >
-                <option value="">All Difficulties</option>
-                <option value="1">Easy</option>
-                <option value="2">Medium</option>
-                <option value="3">Hard</option>
-                <option value="4">Harder</option>
-              </select>
-            </div>
+          <div className="relative flex-1 md:flex-none md:w-40">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground pointer-events-none">
+              <Filter size={16} />
+            </span>
+            <select
+              className="w-full bg-background border border-input rounded-md py-2 pl-9 pr-8 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring transition-all"
+              value={difficulty}
+              onChange={(e) => updateFilters({ difficulty: e.target.value })}
+            >
+              <option value="">All Difficulties</option>
+              <option value="1">Easy</option>
+              <option value="2">Medium</option>
+              <option value="3">Hard</option>
+              <option value="4">Harder</option>
+            </select>
           </div>
         </div>
+      </div>
 
-        {/* Problems Table/List */}
-        <div className="glass-panel rounded-2xl overflow-hidden border border-white/5">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-32 space-y-4">
-              <div className="w-8 h-8 border-2 border-indigoAccent border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-textMuted text-sm font-mono animate-pulse">Retrieving Arena Problems...</span>
-            </div>
-          ) : problems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <span className="text-textMuted font-mono text-sm">No problems match your filter selection.</span>
-              <button
-                onClick={() => setSearchParams({})}
-                className="mt-4 px-4 py-2 bg-indigoAccent/10 border border-indigoAccent/20 hover:border-indigoAccent/40 rounded-xl text-indigoAccent text-xs font-bold transition-all"
-              >
-                Reset Filters
-              </button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-cardLight/50 border-b border-white/5">
-                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-textMuted font-mono w-20">ID</th>
-                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-textMuted">Title</th>
-                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-textMuted w-28 text-center">Difficulty</th>
-                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-textMuted">Topics</th>
-                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-textMuted w-32">Limits</th>
-                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-textMuted w-24 text-center">Action</th>
+      {/* Table */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+            <div className="w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin mb-4"></div>
+            <span className="text-sm">Loading problems...</span>
+          </div>
+        ) : problems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+            <span className="text-sm mb-4">No problems match your filters.</span>
+            <button
+              onClick={() => setSearchParams({})}
+              className="px-4 py-2 bg-muted text-foreground hover:bg-muted/80 rounded-md text-sm font-medium transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="px-6 py-3 font-medium text-muted-foreground w-16">ID</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Title</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Difficulty</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Topics</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {problems.map((problem) => (
+                  <tr key={problem.id} className="hover:bg-muted/30 transition-colors group">
+                    <td className="px-6 py-4 text-muted-foreground font-mono">{problem.id}</td>
+                    <td className="px-6 py-4">
+                      <Link to={`/problems/${problem.id}`} className="font-medium text-foreground group-hover:text-primary transition-colors">
+                        {problem.title}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-0.5 rounded-md text-xs font-medium border ${getDifficultyColor(problem.difficulty)}`}>
+                        {getDifficultyLabel(problem.difficulty)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1.5 max-w-[250px] truncate">
+                        {problem.tags.slice(0, 3).map((t, idx) => (
+                          <span
+                            key={idx}
+                            onClick={() => updateFilters({ tag: t.name })}
+                            className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[10px] cursor-pointer hover:bg-foreground hover:text-background transition-colors"
+                          >
+                            {t.name}
+                          </span>
+                        ))}
+                        {problem.tags.length > 3 && (
+                          <span className="text-[10px] text-muted-foreground align-middle">+{problem.tags.length - 3}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link
+                        to={`/problems/${problem.id}`}
+                        className="inline-flex items-center justify-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        title="Solve Problem"
+                      >
+                        <Eye size={16} />
+                      </Link>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {problems.map((problem) => (
-                    <tr key={problem.id} className="hover:bg-cardLight/20 transition-colors">
-                      <td className="px-6 py-4 text-sm font-mono font-semibold text-indigoAccent">{problem.id}</td>
-                      <td className="px-6 py-4">
-                        <Link to={`/problems/${problem.id}`} className="text-white hover:text-indigoAccent font-bold transition-colors">
-                          {problem.title}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 text-center">{getDifficultyBadge(problem.difficulty)}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1.5 max-w-[300px]">
-                          {problem.tags.slice(0, 3).map((t, idx) => (
-                            <span
-                              key={idx}
-                              onClick={() => updateFilters({ tag: t.name })}
-                              className="px-2 py-0.5 bg-cardLight text-[10px] text-textMuted rounded hover:text-white hover:bg-indigoAccent/20 hover:border-indigoAccent/15 border border-white/5 cursor-pointer font-semibold transition-all"
-                            >
-                              {t.name}
-                            </span>
-                          ))}
-                          {problem.tags.length > 3 && (
-                            <span className="text-[10px] text-textMuted align-middle self-center font-mono">+{problem.tags.length - 3}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-xs text-textMuted font-mono space-y-0.5">
-                        <div className="font-semibold">{problem.timeLimitSec}s limit</div>
-                        <div>{problem.memoryLimitMb}MB limit</div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <Link
-                          to={`/problems/${problem.id}`}
-                          className="inline-flex items-center gap-1.5 py-2 px-3.5 bg-indigoAccent/10 border border-indigoAccent/20 hover:border-indigoAccent/40 hover:bg-indigoAccent/20 rounded-xl text-indigoAccent text-xs font-bold transition-all shadow-neonViolet/5"
-                        >
-                          <Eye size={14} />
-                          <span>Solve</span>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Pagination Panel */}
-        {!loading && problems.length > 0 && (
-          <div className="flex items-center justify-between py-2 border-t border-white/5">
-            <span className="text-xs text-textMuted font-mono">
-              Showing page <strong className="text-white">{pagination.page}</strong> of <strong className="text-white">{pagination.totalPages}</strong> ({pagination.totalCount} problems)
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                disabled={pagination.page <= 1}
-                onClick={() => updateFilters({ page: pagination.page - 1 })}
-                className="inline-flex items-center gap-1 py-2 px-3 rounded-xl border border-white/5 bg-cardLight/50 hover:bg-cardLight text-textMain text-xs font-bold disabled:opacity-30 disabled:pointer-events-none transition-colors"
-              >
-                <ArrowLeft size={14} />
-                <span>Prev</span>
-              </button>
-
-              <button
-                disabled={pagination.page >= pagination.totalPages}
-                onClick={() => updateFilters({ page: pagination.page + 1 })}
-                className="inline-flex items-center gap-1 py-2 px-3 rounded-xl border border-white/5 bg-cardLight/50 hover:bg-cardLight text-textMain text-xs font-bold disabled:opacity-30 disabled:pointer-events-none transition-colors"
-              >
-                <span>Next</span>
-                <ArrowRight size={14} />
-              </button>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
-    </Layout>
+
+      {/* Pagination */}
+      {!loading && problems.length > 0 && (
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">
+            Showing <span className="font-medium text-foreground">{pagination.page}</span> of <span className="font-medium text-foreground">{pagination.totalPages}</span> pages
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={pagination.page <= 1}
+              onClick={() => updateFilters({ page: pagination.page - 1 })}
+              className="px-3 py-1.5 rounded-md border border-border hover:bg-muted disabled:opacity-50 disabled:pointer-events-none transition-colors flex items-center gap-1"
+            >
+              <ArrowLeft size={14} />
+              Prev
+            </button>
+            <button
+              disabled={pagination.page >= pagination.totalPages}
+              onClick={() => updateFilters({ page: pagination.page + 1 })}
+              className="px-3 py-1.5 rounded-md border border-border hover:bg-muted disabled:opacity-50 disabled:pointer-events-none transition-colors flex items-center gap-1"
+            >
+              Next
+              <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 export default ProblemList;

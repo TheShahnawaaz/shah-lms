@@ -3,29 +3,10 @@ import AuthService from "./auth.service";
 import { AuthenticatedRequest } from "../../middlewares/auth";
 
 export class AuthController {
-  static async register(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { email, password, name } = req.body;
-      const result = await AuthService.register({ email, password, name });
-      
-      res.status(201).json({
-        code: 201,
-        details: "User registered successfully.",
-        data: result
-      });
-    } catch (err: any) {
-      res.status(400).json({
-        code: 400,
-        details: err.message || "Registration failed.",
-        data: null
-      });
-    }
-  }
-
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
-      const result = await AuthService.login(email, password);
+      const { idToken } = req.body;
+      const result = await AuthService.loginWithGoogle(idToken);
 
       res.status(200).json({
         code: 200,

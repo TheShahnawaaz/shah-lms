@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ["class"],
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,24 +8,50 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#090a0f",
-        card: "#11131c",
-        cardLight: "#181b28",
-        borderDark: "rgba(255, 255, 255, 0.06)",
-        borderLight: "rgba(255, 255, 255, 0.12)",
-        emeraldAccent: "#10b981",
-        violetAccent: "#8b5cf6",
-        indigoAccent: "#6366f1",
-        textMain: "#f3f4f6",
-        textMuted: "#9ca3af",
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
         mono: ["Fira Code", "monospace"],
       },
       boxShadow: {
-        neonEmerald: "0 0 15px rgba(16, 185, 129, 0.25)",
-        neonViolet: "0 0 15px rgba(139, 92, 246, 0.25)",
         glass: "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
       }
     },

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import api from "../../lib/api";
+import { UploadCloud, CheckCircle, AlertCircle } from "lucide-react";
 
 // Pure JavaScript MD5 implementation
 function md5(string: string) {
@@ -52,7 +53,6 @@ function md5(string: string) {
     const lNumberOfWords_temp2 = (lNumberOfWords_temp1 - (lNumberOfWords_temp1 % 64)) / 64;
     const lNumberOfWords = (lNumberOfWords_temp2 + 1) * 16;
     const lWordArray = Array(lNumberOfWords);
-    // Initialize array elements
     for (let i = 0; i < lNumberOfWords; i++) lWordArray[i] = 0;
     let lBytePosition = 0;
     let lByteCount = 0;
@@ -113,74 +113,23 @@ function md5(string: string) {
     let BB = b;
     let CC = c;
     let DD = d;
-    a = FF(a, b, c, d, x[k + 0], S11, 0xd76aa478);
-    d = FF(d, a, b, c, x[k + 1], S12, 0xe8c7b756);
-    c = FF(c, d, a, b, x[k + 2], S13, 0x242070db);
-    b = FF(b, c, d, a, x[k + 3], S14, 0xc1bdceee);
-    a = FF(a, b, c, d, x[k + 4], S11, 0xf57c0faf);
-    d = FF(d, a, b, c, x[k + 5], S12, 0x4787c62a);
-    c = FF(c, d, a, b, x[k + 6], S13, 0xa8304613);
-    b = FF(b, c, d, a, x[k + 7], S14, 0xfd469501);
-    a = FF(a, b, c, d, x[k + 8], S11, 0x698098d8);
-    d = FF(d, a, b, c, x[k + 9], S12, 0x8b44f7af);
-    c = FF(c, d, a, b, x[k + 10], S13, 0xffff5bb1);
-    b = FF(b, c, d, a, x[k + 11], S14, 0x895cd7be);
-    a = FF(a, b, c, d, x[k + 12], S11, 0x6b901122);
-    d = FF(d, a, b, c, x[k + 13], S12, 0xfd987193);
-    c = FF(c, d, a, b, x[k + 14], S13, 0xa679438e);
-    b = FF(b, c, d, a, x[k + 15], S14, 0x49b40821);
-    a = GG(a, b, c, d, x[k + 1], S21, 0xf61e2562);
-    d = GG(d, a, b, c, x[k + 6], S22, 0xc040b340);
-    c = GG(c, d, a, b, x[k + 11], S23, 0x265e5a51);
-    b = GG(b, c, d, a, x[k + 0], S24, 0xe9b6c7aa);
-    a = GG(a, b, c, d, x[k + 5], S21, 0xd62f105d);
-    d = GG(d, a, b, c, x[k + 10], S22, 0x02441453);
-    c = GG(c, d, a, b, x[k + 15], S23, 0xd8a1e681);
-    b = GG(b, c, d, a, x[k + 4], S24, 0xe7d3fbc8);
-    a = GG(a, b, c, d, x[k + 9], S21, 0x21e1cde6);
-    d = GG(d, a, b, c, x[k + 14], S22, 0xc33707d6);
-    c = GG(c, d, a, b, x[k + 3], S23, 0xf4d50d87);
-    b = GG(b, c, d, a, x[k + 8], S24, 0x455a14ed);
-    a = GG(a, b, c, d, x[k + 13], S21, 0xa9e3e905);
-    d = GG(d, a, b, c, x[k + 2], S22, 0xfcefa3f8);
-    c = GG(c, d, a, b, x[k + 7], S23, 0x676f02d9);
-    b = GG(b, c, d, a, x[k + 12], S24, 0x8d2a4c8a);
-    a = HH(a, b, c, d, x[k + 5], S31, 0xfffa3942);
-    d = HH(d, a, b, c, x[k + 8], S32, 0x8771f681);
-    c = HH(c, d, a, b, x[k + 11], S33, 0x6d9d6122);
-    b = HH(b, c, d, a, x[k + 14], S34, 0xfde5380c);
-    a = HH(a, b, c, d, x[k + 1], S31, 0xa4beea44);
-    d = HH(d, a, b, c, x[k + 4], S32, 0x4bdecfa9);
-    c = HH(c, d, a, b, x[k + 7], S33, 0xf6bb4b60);
-    b = HH(b, c, d, a, x[k + 10], S34, 0xbebfbc70);
-    a = HH(a, b, c, d, x[k + 13], S31, 0x289b7ec6);
-    d = HH(d, a, b, c, x[k + 0], S32, 0xeaa127fa);
-    c = HH(c, d, a, b, x[k + 3], S33, 0xd4ef3085);
-    b = HH(b, c, d, a, x[k + 6], S34, 0x04881d05);
-    a = HH(a, b, c, d, x[k + 9], S31, 0xd9d4d039);
-    d = HH(d, a, b, c, x[k + 12], S32, 0xe6db99e5);
-    c = HH(c, d, a, b, x[k + 15], S33, 0x1fa27cf8);
-    b = HH(b, c, d, a, x[k + 2], S34, 0xc4ac5665);
-    a = II(a, b, c, d, x[k + 0], S41, 0xf4292244);
-    d = II(d, a, b, c, x[k + 7], S42, 0x432aff97);
-    c = II(c, d, a, b, x[k + 14], S43, 0xab9423a7);
-    b = II(b, c, d, a, x[k + 5], S44, 0xfc93a039);
-    a = II(a, b, c, d, x[k + 12], S41, 0x655b59c3);
-    d = II(d, a, b, c, x[k + 3], S42, 0x8f0ccc92);
-    c = II(c, d, a, b, x[k + 10], S43, 0xffeff47d);
-    b = II(b, c, d, a, x[k + 1], S44, 0x85845dd1);
-    a = II(a, b, c, d, x[k + 8], S41, 0x6fa87e4f);
-    d = II(d, a, b, c, x[k + 15], S42, 0xfe2ce6e0);
-    c = II(c, d, a, b, x[k + 6], S43, 0xa3014314);
-    b = II(b, c, d, a, x[k + 13], S44, 0x4e0811a1);
-    a = II(a, b, c, d, x[k + 4], S41, 0xf7537e82);
-    d = II(d, a, b, c, x[k + 11], S42, 0xbd3af235);
-    c = II(c, d, a, b, x[k + 2], S43, 0x2ad7d2bb);
-    b = II(b, c, d, a, x[k + 9], S44, 0xeb86d391);
-    a = AddUnsigned(a, AA);
-    b = AddUnsigned(b, BB);
-    c = AddUnsigned(c, CC);
-    d = AddUnsigned(d, DD);
+    a = FF(a, b, c, d, x[k + 0], S11, 0xd76aa478); d = FF(d, a, b, c, x[k + 1], S12, 0xe8c7b756); c = FF(c, d, a, b, x[k + 2], S13, 0x242070db); b = FF(b, c, d, a, x[k + 3], S14, 0xc1bdceee);
+    a = FF(a, b, c, d, x[k + 4], S11, 0xf57c0faf); d = FF(d, a, b, c, x[k + 5], S12, 0x4787c62a); c = FF(c, d, a, b, x[k + 6], S13, 0xa8304613); b = FF(b, c, d, a, x[k + 7], S14, 0xfd469501);
+    a = FF(a, b, c, d, x[k + 8], S11, 0x698098d8); d = FF(d, a, b, c, x[k + 9], S12, 0x8b44f7af); c = FF(c, d, a, b, x[k + 10], S13, 0xffff5bb1); b = FF(b, c, d, a, x[k + 11], S14, 0x895cd7be);
+    a = FF(a, b, c, d, x[k + 12], S11, 0x6b901122); d = FF(d, a, b, c, x[k + 13], S12, 0xfd987193); c = FF(c, d, a, b, x[k + 14], S13, 0xa679438e); b = FF(b, c, d, a, x[k + 15], S14, 0x49b40821);
+    a = GG(a, b, c, d, x[k + 1], S21, 0xf61e2562); d = GG(d, a, b, c, x[k + 6], S22, 0xc040b340); c = GG(c, d, a, b, x[k + 11], S23, 0x265e5a51); b = GG(b, c, d, a, x[k + 0], S24, 0xe9b6c7aa);
+    a = GG(a, b, c, d, x[k + 5], S21, 0xd62f105d); d = GG(d, a, b, c, x[k + 10], S22, 0x02441453); c = GG(c, d, a, b, x[k + 15], S23, 0xd8a1e681); b = GG(b, c, d, a, x[k + 4], S24, 0xe7d3fbc8);
+    a = GG(a, b, c, d, x[k + 9], S21, 0x21e1cde6); d = GG(d, a, b, c, x[k + 14], S22, 0xc33707d6); c = GG(c, d, a, b, x[k + 3], S23, 0xf4d50d87); b = GG(b, c, d, a, x[k + 8], S24, 0x455a14ed);
+    a = GG(a, b, c, d, x[k + 13], S21, 0xa9e3e905); d = GG(d, a, b, c, x[k + 2], S22, 0xfcefa3f8); c = GG(c, d, a, b, x[k + 7], S23, 0x676f02d9); b = GG(b, c, d, a, x[k + 12], S24, 0x8d2a4c8a);
+    a = HH(a, b, c, d, x[k + 5], S31, 0xfffa3942); d = HH(d, a, b, c, x[k + 8], S32, 0x8771f681); c = HH(c, d, a, b, x[k + 11], S33, 0x6d9d6122); b = HH(b, c, d, a, x[k + 14], S34, 0xfde5380c);
+    a = HH(a, b, c, d, x[k + 1], S31, 0xa4beea44); d = HH(d, a, b, c, x[k + 4], S32, 0x4bdecfa9); c = HH(c, d, a, b, x[k + 7], S33, 0xf6bb4b60); b = HH(b, c, d, a, x[k + 10], S34, 0xbebfbc70);
+    a = HH(a, b, c, d, x[k + 13], S31, 0x289b7ec6); d = HH(d, a, b, c, x[k + 0], S32, 0xeaa127fa); c = HH(c, d, a, b, x[k + 3], S33, 0xd4ef3085); b = HH(b, c, d, a, x[k + 6], S34, 0x04881d05);
+    a = HH(a, b, c, d, x[k + 9], S31, 0xd9d4d039); d = HH(d, a, b, c, x[k + 12], S32, 0xe6db99e5); c = HH(c, d, a, b, x[k + 15], S33, 0x1fa27cf8); b = HH(b, c, d, a, x[k + 2], S34, 0xc4ac5665);
+    a = II(a, b, c, d, x[k + 0], S41, 0xf4292244); d = II(d, a, b, c, x[k + 7], S42, 0x432aff97); c = II(c, d, a, b, x[k + 14], S43, 0xab9423a7); b = II(b, c, d, a, x[k + 5], S44, 0xfc93a039);
+    a = II(a, b, c, d, x[k + 12], S41, 0x655b59c3); d = II(d, a, b, c, x[k + 3], S42, 0x8f0ccc92); c = II(c, d, a, b, x[k + 10], S43, 0xffeff47d); b = II(b, c, d, a, x[k + 1], S44, 0x85845dd1);
+    a = II(a, b, c, d, x[k + 8], S41, 0x6fa87e4f); d = II(d, a, b, c, x[k + 15], S42, 0xfe2ce6e0); c = II(c, d, a, b, x[k + 6], S43, 0xa3014314); b = II(b, c, d, a, x[k + 13], S44, 0x4e0811a1);
+    a = II(a, b, c, d, x[k + 4], S41, 0xf7537e82); d = II(d, a, b, c, x[k + 11], S42, 0xbd3af235); c = II(c, d, a, b, x[k + 2], S43, 0x2ad7d2bb); b = II(b, c, d, a, x[k + 9], S44, 0xeb86d391);
+    a = AddUnsigned(a, AA); b = AddUnsigned(b, BB); c = AddUnsigned(c, CC); d = AddUnsigned(d, DD);
   }
   const temp = WordToHex(a) + WordToHex(b) + WordToHex(c) + WordToHex(d);
   return temp.toLowerCase();
@@ -193,7 +142,6 @@ export const SeedPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
   
-  // Sync statistics
   const [stats, setStats] = useState({
     created: 0,
     updated: 0,
@@ -269,7 +217,6 @@ export const SeedPage: React.FC = () => {
       
       const parsedProblems: any[] = [];
       
-      // Parse files in chunks of 50 to avoid browser memory lock
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
         try {
@@ -335,25 +282,19 @@ export const SeedPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Title section */}
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-          Database Seeder
-        </h1>
-        <p className="text-slate-400 mt-1">
-          Perform a batch upload of DSA problems using local JSON files. File hashes will be computed and verified incrementally.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Database Seeder</h1>
+        <p className="text-sm text-muted-foreground mt-1">Batch upload DSA problems from local JSON files.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Upload controller */}
         <div className="lg:col-span-2 space-y-6">
           <div
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-slate-800 hover:border-violet-500/50 bg-slate-900/40 hover:bg-slate-900/60 backdrop-blur-md rounded-2xl p-10 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-300 group"
+            className="border-2 border-dashed border-border hover:border-primary bg-muted/10 hover:bg-muted/30 rounded-xl p-10 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all group"
           >
             <input
               type="file"
@@ -363,35 +304,29 @@ export const SeedPage: React.FC = () => {
               accept=".json"
               className="hidden"
             />
-            <div className="w-16 h-16 rounded-2xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-violet-400 group-hover:scale-110 transition-all duration-300">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
+            <div className="w-16 h-16 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
+              <UploadCloud size={32} />
             </div>
             <div className="text-center">
-              <p className="text-base font-semibold text-slate-200">
-                Drag and drop problem files here or click to browse
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Supports multiple .json files scraper output
-              </p>
+              <p className="text-sm font-medium text-foreground">Drag & drop files or click to browse</p>
+              <p className="text-xs text-muted-foreground mt-1">Supports multiple .json files</p>
             </div>
           </div>
 
           {selectedFiles.length > 0 && (
-            <div className="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-slate-300">
-                  Ready to Sync: <span className="text-violet-400">{selectedFiles.length} files</span>
+            <div className="border border-border rounded-xl p-6 bg-card shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="text-sm font-medium text-foreground">
+                  Ready to Sync: <span className="text-primary">{selectedFiles.length} files</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <label className="text-xs text-slate-400 font-medium">Batch Size:</label>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-muted-foreground font-medium">Batch Size:</label>
                   <input
                     type="number"
                     value={batchSize}
                     onChange={(e) => setBatchSize(Math.max(1, parseInt(e.target.value) || 50))}
                     disabled={isSyncing}
-                    className="w-16 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-center focus:outline-none focus:border-violet-500 text-slate-300"
+                    className="w-20 bg-background border border-input rounded-md px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
               </div>
@@ -399,22 +334,20 @@ export const SeedPage: React.FC = () => {
               {!isSyncing && progress === 0 ? (
                 <button
                   onClick={runDatabaseSync}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold text-sm transition-all duration-300 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm transition-colors flex items-center justify-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Sync to Database
+                  <CheckCircle size={16} />
+                  Start Sync
                 </button>
               ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="text-violet-400 animate-pulse">{currentStep}</span>
-                    <span className="text-slate-300">{progress}%</span>
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between text-xs font-medium">
+                    <span className="text-primary truncate pr-4">{currentStep}</span>
+                    <span className="text-foreground shrink-0">{progress}%</span>
                   </div>
-                  <div className="w-full bg-slate-950 rounded-full h-2 border border-slate-800 overflow-hidden">
+                  <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-violet-500 to-fuchsia-500 h-full rounded-full transition-all duration-300"
+                      className="bg-primary h-full rounded-full transition-all duration-300"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -424,46 +357,35 @@ export const SeedPage: React.FC = () => {
           )}
         </div>
 
-        {/* Sync Statistics */}
         <div className="space-y-6">
-          <div className="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">Sync Statistics</h3>
+          <div className="border border-border rounded-xl p-6 bg-card shadow-sm space-y-4">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Sync Statistics</h3>
             
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/40">
-                <span className="text-xs text-slate-400">Total Files</span>
-                <span className="text-sm font-bold text-slate-200">{stats.totalFiles}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/40">
-                <span className="text-xs text-slate-400">Processed</span>
-                <span className="text-sm font-bold text-violet-400">{stats.processedFiles}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/40">
-                <span className="text-xs text-slate-400">Created</span>
-                <span className="text-sm font-bold text-emerald-400">+{stats.created}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/40">
-                <span className="text-xs text-slate-400">Updated</span>
-                <span className="text-sm font-bold text-amber-400">~{stats.updated}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/40">
-                <span className="text-xs text-slate-400">Skipped (Match)</span>
-                <span className="text-sm font-bold text-slate-400">{stats.skipped}</span>
-              </div>
+            <div className="space-y-2">
+              {[
+                { label: "Total Files", value: stats.totalFiles, color: "text-foreground" },
+                { label: "Processed", value: stats.processedFiles, color: "text-primary" },
+                { label: "Created", value: `+${stats.created}`, color: "text-emerald-500" },
+                { label: "Updated", value: `~${stats.updated}`, color: "text-amber-500" },
+                { label: "Skipped", value: stats.skipped, color: "text-muted-foreground" },
+              ].map((stat, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2.5 rounded-md bg-muted/30 border border-border/50 text-sm">
+                  <span className="text-muted-foreground">{stat.label}</span>
+                  <span className={`font-medium ${stat.color}`}>{stat.value}</span>
+                </div>
+              ))}
             </div>
           </div>
 
           {errors.length > 0 && (
-            <div className="bg-rose-950/10 border border-rose-900/30 backdrop-blur-md rounded-2xl p-6 space-y-3">
-              <h4 className="text-sm font-semibold text-rose-400 flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                Sync Notices / Errors ({errors.length})
+            <div className="border border-destructive/30 rounded-xl p-6 bg-destructive/5 space-y-3">
+              <h4 className="text-sm font-semibold text-destructive flex items-center gap-1.5">
+                <AlertCircle size={16} />
+                Errors ({errors.length})
               </h4>
-              <div className="max-h-48 overflow-y-auto text-xs space-y-2 font-mono scrollbar-thin scrollbar-thumb-rose-900">
+              <div className="max-h-48 overflow-y-auto text-xs space-y-2 font-mono scrollbar-thin scrollbar-thumb-destructive/20 pr-2">
                 {errors.map((err, idx) => (
-                  <div key={idx} className="p-2 rounded bg-rose-950/20 text-rose-300 border border-rose-900/10">
+                  <div key={idx} className="p-2 rounded bg-background text-destructive/90 border border-destructive/20">
                     {err}
                   </div>
                 ))}

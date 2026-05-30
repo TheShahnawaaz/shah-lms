@@ -1,78 +1,84 @@
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../../config/db";
+import { OAuth2Client } from "google-auth-library";
 
-interface RegisterInput {
-  email: string;
-  password?: string;
-  name?: string;
-}
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export class AuthService {
   private static jwtSecret = process.env.JWT_SECRET || "az_practice_secret_jwt_key_987654321";
 
-  static async register(input: RegisterInput) {
-    const { email, password, name } = input;
-    if (!email || !password) {
-      throw new Error("Email and password are required.");
+  static async loginWithGoogle(idToken: string) {
+    if (!idToken) {
+      throw new Error("Google ID token is required.");
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      throw new Error("User with this email already exists.");
-    }
+    let email: string;
+    let name: string;
+    let picture: string;
 
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
-      data: {
-        email,
-        passwordHash,
-        name
+    // Check for dev/testing mock token
+    if (process.env.NODE_ENV !== "production" && idToken.startsWith("mock_token_")) {
+      email = idToken.replace("mock_token_", "").toLowerCase();
+      name = email.split("@")[0];
+      picture = `https://api.dicebear.com/7.x/initials/svg?seed=${name}`;
+      console.log(`[Dev Mode] Bypassing Google OAuth. Logging in mock email: ${email}`);
+    } else {
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: idToken,
+          audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+          throw new Error("Invalid Google token payload.");
+        }
+        email = payload.email.toLowerCase();
+        name = payload.name || "";
+        picture = payload.picture || "";
+      } catch (err: any) {
+        console.error("Google ID Token verification failed:", err);
+        throw new Error("Google Token verification failed: " + err.message);
       }
-    });
-
-    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.isAdmin }, this.jwtSecret, {
-      expiresIn: "7d"
-    });
-
-    return {
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        isAdmin: user.isAdmin
-      }
-    };
-  }
-
-  static async login(email?: string, password?: string) {
-    if (!email || !password) {
-      throw new Error("Email and password are required.");
     }
 
+    // Safelist verification - Check if email is in our User table
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new Error("Invalid email or password.");
+      throw new Error("This email is not authorized to access the platform. Please contact the administrator.");
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) {
-      throw new Error("Invalid email or password.");
+    // Sync profile picture and name on login
+    const updatedData: any = {};
+    if (!user.name && name) {
+      updatedData.name = name;
+    }
+    if (user.profilePictureUrl !== picture) {
+      updatedData.profilePictureUrl = picture;
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.isAdmin }, this.jwtSecret, {
-      expiresIn: "7d"
-    });
+    let loggedInUser = user;
+    if (Object.keys(updatedData).length > 0) {
+      loggedInUser = await prisma.user.update({
+        where: { email },
+        data: updatedData,
+      });
+    }
+
+    // Issue standard JWT session
+    const token = jwt.sign(
+      { id: loggedInUser.id, email: loggedInUser.email, isAdmin: loggedInUser.isAdmin },
+      this.jwtSecret,
+      { expiresIn: "7d" }
+    );
 
     return {
       token,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        isAdmin: user.isAdmin
+        id: loggedInUser.id,
+        email: loggedInUser.email,
+        name: loggedInUser.name,
+        profilePictureUrl: loggedInUser.profilePictureUrl,
+        isAdmin: loggedInUser.isAdmin,
       }
     };
   }
@@ -80,7 +86,14 @@ export class AuthService {
   static async getUserProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, isAdmin: true, createdAt: true }
+      select: { 
+        id: true, 
+        email: true, 
+        name: true, 
+        profilePictureUrl: true, 
+        isAdmin: true, 
+        createdAt: true 
+      }
     });
 
     if (!user) {

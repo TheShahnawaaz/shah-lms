@@ -1,99 +1,206 @@
-import React from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, ListTodo, LogOut, Terminal } from "lucide-react";
-import api from "../lib/api";
+import React, { useState, useEffect, useRef } from "react";
+import { Sidebar } from "./Sidebar";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation, Link, useNavigate } from "react-router-dom";
+import { ChevronRight, Sun, Moon, LogOut, Menu } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface LayoutProps {
   children: React.ReactNode;
+  fullWidth?: boolean;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const navigate = useNavigate();
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
+export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const location = useLocation();
-  const userName = localStorage.getItem("az_user_name") || "Coder";
+  const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const token = localStorage.getItem("az_auth_token");
+  const payload = token ? parseJwt(token) : null;
+  const userName = payload?.name || localStorage.getItem("az_user_name") || "Coder";
+  const userEmail = payload?.email || "user@shahlms.com";
+  const isAdmin = payload?.isAdmin || false;
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
-    api.clearToken();
+    localStorage.removeItem("az_auth_token");
     localStorage.removeItem("az_user_name");
     navigate("/login");
   };
 
-  const isActive = (path: string) => {
-    return location.pathname.startsWith(path);
+  // Generate dynamic breadcrumbs from path
+  const getBreadcrumbs = () => {
+    const parts = location.pathname.split("/").filter(Boolean);
+    const crumbs = [{ name: "Home", path: "/dashboard" }];
+    
+    let currentPath = "";
+    parts.forEach((part) => {
+      currentPath += `/${part}`;
+      let name = part.charAt(0).toUpperCase() + part.slice(1);
+      if (part === "dashboard") name = "Dashboard";
+      if (part === "problems") name = "Problems";
+      if (part === "seed") name = "Database Seeder";
+      if (!isNaN(Number(part))) name = `#${part}`;
+      crumbs.push({ name, path: currentPath });
+    });
+    
+    // De-duplicate if last element is home
+    if (crumbs.length > 1 && crumbs[1].path === "/dashboard") {
+      crumbs.shift(); // Remove "Home" if the next is "Dashboard"
+    }
+    return crumbs;
   };
 
+  const breadcrumbs = getBreadcrumbs();
+
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 glass-panel border-r border-white/5 flex flex-col justify-between shrink-0 h-full relative z-10">
-        <div className="flex flex-col">
-          {/* Header */}
-          <div className="flex items-center gap-3 px-6 py-5 border-b border-white/5">
-            <div className="p-2 bg-indigoAccent/10 rounded-lg border border-indigoAccent/20 text-indigoAccent">
-              <Terminal size={20} />
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
+      {/* Sidebar - collapsible state is managed here */}
+      <Sidebar isCollapsed={isCollapsed} />
+
+      {/* Main container */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        
+        {/* Sticky Header - Hides on fullWidth mode */}
+        {!fullWidth && (
+          <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="p-2 -ml-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <Menu size={18} />
+              </button>
+              <div className="h-4 w-px bg-border hidden sm:block" />
+              
+              {/* Breadcrumbs */}
+              <nav className="hidden sm:flex items-center gap-1.5 text-sm font-medium min-w-0">
+                {breadcrumbs.map((crumb, idx) => {
+                  const isLast = idx === breadcrumbs.length - 1;
+                  return (
+                    <div key={crumb.path} className="flex items-center gap-1.5 min-w-0">
+                      {idx > 0 && <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />}
+                      {isLast ? (
+                        <span className="text-foreground font-semibold truncate max-w-[200px]">{crumb.name}</span>
+                      ) : (
+                        <Link
+                          to={crumb.path}
+                          className="text-muted-foreground hover:text-foreground transition-colors truncate max-w-[150px]"
+                        >
+                          {crumb.name}
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
+              </nav>
             </div>
-            <div>
-              <span className="font-bold text-white tracking-wide font-mono block animate-pulse">
-                SHAH <span className="text-emeraldAccent">LMS</span>
-              </span>
-              <span className="text-[10px] text-textMuted font-mono">v1.0.0</span>
+
+            {/* Header Right Actions */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border"
+                title="Toggle Theme"
+              >
+                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+
+              {/* User Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted/80 border border-border/60 transition-colors"
+                >
+                  <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                    {userName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="hidden md:flex flex-col text-left leading-tight pr-2">
+                    <span className="text-xs font-semibold text-foreground truncate max-w-[120px]">{userName}</span>
+                    <span className="text-[10px] text-muted-foreground">{isAdmin ? "Super Admin" : "User"}</span>
+                  </div>
+                </button>
+
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {userDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.12 }}
+                      className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card p-1 shadow-lg z-50"
+                    >
+                      <div className="px-2 py-1.5 text-left leading-tight border-b border-border/60 pb-2 mb-1">
+                        <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
+                        <div className="text-[10px] text-muted-foreground truncate">{userEmail}</div>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <LogOut size={14} />
+                        <span>Log out</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
-          </div>
+          </header>
+        )}
 
-          {/* Navigation Links */}
-          <nav className="px-4 py-6 space-y-1">
-            <Link
-              to="/dashboard"
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                isActive("/dashboard")
-                  ? "bg-indigoAccent/10 text-white border border-indigoAccent/20"
-                  : "text-textMuted hover:text-white hover:bg-cardLight/50"
-              }`}
-            >
-              <LayoutDashboard size={18} />
-              <span>Dashboard</span>
-            </Link>
-
-            <Link
-              to="/problems"
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                isActive("/problems")
-                  ? "bg-indigoAccent/10 text-white border border-indigoAccent/20"
-                  : "text-textMuted hover:text-white hover:bg-cardLight/50"
-              }`}
-            >
-              <ListTodo size={18} />
-              <span>Problems</span>
-            </Link>
-          </nav>
-        </div>
-
-        {/* Footer Profile & Logout */}
-        <div className="p-4 border-t border-white/5 space-y-3">
-          <div className="flex items-center gap-3 px-3 py-2 bg-cardLight/30 rounded-xl border border-white/5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violetAccent to-indigoAccent flex items-center justify-center text-white font-mono font-bold text-sm">
-              {userName[0].toUpperCase()}
+        {/* Page Content Viewport */}
+        <main className="flex-1 overflow-hidden relative">
+          {fullWidth ? (
+            <div className="h-full w-full">{children}</div>
+          ) : (
+            <div className="h-full w-full overflow-y-auto bg-background">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={location.pathname}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  className="min-h-full w-full max-w-7xl mx-auto p-6 md:p-8"
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
             </div>
-            <div className="overflow-hidden">
-              <span className="block text-xs font-semibold text-white truncate">{userName}</span>
-              <span className="block text-[10px] text-textMuted truncate">Student</span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <LogOut size={18} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto relative h-full">
-        {children}
-      </main>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

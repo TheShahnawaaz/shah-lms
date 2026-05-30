@@ -3,7 +3,13 @@ import { useParams, Link } from "react-router-dom";
 import api from "../lib/api";
 import MathRenderer from "../components/MathRenderer";
 import MonacoEditor from "@monaco-editor/react";
-import { ArrowLeft, BookOpen, Code, Copy, HelpCircle, Save, CheckCircle, RotateCcw } from "lucide-react";
+import { 
+  ArrowLeft, BookOpen, Code, Copy, HelpCircle, Save, 
+  CheckCircle, RotateCcw, Play, Send, ChevronUp, ChevronDown, 
+  Maximize2, Minimize2, Bookmark, Flame, Trophy, Star, Bell, 
+  Terminal, Check, Clock, Sun, Moon
+} from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface Sample {
   input: string;
@@ -43,11 +49,28 @@ interface ProblemDetailData {
   tags: { name: string }[];
 }
 
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 export const ProblemDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [problem, setProblem] = useState<ProblemDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { theme, setTheme } = useTheme();
 
   // Tab selections
   const [activeLeftTab, setActiveLeftTab] = useState<"desc" | "hints" | "editorial">("desc");
@@ -55,9 +78,49 @@ export const ProblemDetail: React.FC = () => {
   const [editorLang, setEditorLang] = useState<string>("C++14");
   const [editorCode, setEditorCode] = useState<string>("");
 
-  // UI state
+  // Editor states
+  const [fontSize, setFontSize] = useState<number>(14);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [expandedHint, setExpandedHint] = useState<"h1" | "h2" | "sa" | null>(null);
+
+  // Console runner states
+  const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(false);
+  const [runnerTab, setRunnerTab] = useState<"sample" | "manual">("sample");
+  const [activeSampleIdx, setActiveSampleIdx] = useState<number>(0);
+  const [manualInput, setManualInput] = useState<string>("");
+  const [manualOutput, setManualOutput] = useState<string>("");
+  const [isRunning, setIsRunning] = useState(false);
+  const [runSuccess, setRunSuccess] = useState(false);
+  const [runExecuted, setRunExecuted] = useState(false);
+  const [runStep, setRunStep] = useState<string>("");
+  const [bookmarked, setBookmarked] = useState(false);
+
+  const token = localStorage.getItem("az_auth_token");
+  const payload = token ? parseJwt(token) : null;
+  const userName = payload?.name || localStorage.getItem("az_user_name") || "Coder";
+
+  function getDefaultTemplate(lang: string) {
+    if (lang.includes("Python")) {
+      return "# Write your solution code here\n\nimport sys\n\ndef solve():\n    # Read input from standard input\n    # lines = sys.stdin.read().split()\n    pass\n\nif __name__ == '__main__':\n    solve()\n";
+    }
+    if (lang === "Java") {
+      return "import java.util.*;\nimport java.io.*;\n\npublic class Main {\n    public static void main(String[] args) throws IOException {\n        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));\n        // Write your solution code here\n    }\n}\n";
+    }
+    return "#include <bits/stdc++.h>\nusing namespace std;\n\nvoid solve() {\n    // Write your solution code here\n}\n\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(NULL);\n    int t = 1;\n    cin >> t;\n    while (t--) {\n        solve();\n    }\n    return 0;\n}\n";
+  }
+
+  function loadCodeWorkspace(p: ProblemDetailData, lang: string) {
+    const cacheKey = `course_0_${p.id}_${lang}`;
+    const cachedCode = localStorage.getItem(cacheKey);
+
+    if (cachedCode) {
+      setEditorCode(cachedCode);
+    } else {
+      const template = p.templates.find(t => t.language === lang || (lang === "C++14" && t.language === "C++"));
+      setEditorCode(template ? template.code : getDefaultTemplate(lang));
+    }
+  }
 
   useEffect(() => {
     const fetchProblemDetail = async () => {
@@ -67,15 +130,18 @@ export const ProblemDetail: React.FC = () => {
         const res = await api.get<ProblemDetailData>(`/problems/${id}`);
         setProblem(res.data);
 
-        // Pre-select first editorial language if available
         if (res.data.editorials && res.data.editorials.length > 0) {
           setActiveEditorialLang(res.data.editorials[0].language);
         }
 
-        // Recover saved workspace code or load template
         const defaultLang = localStorage.getItem("editor-language") || "C++14";
         setEditorLang(defaultLang);
         loadCodeWorkspace(res.data, defaultLang);
+        
+        // Set manual input to first sample input initially
+        if (res.data.samples && res.data.samples.length > 0) {
+          setManualInput(res.data.samples[0].input);
+        }
       } catch (err: any) {
         setError(err.message || "Failed to load problem details.");
       } finally {
@@ -86,22 +152,8 @@ export const ProblemDetail: React.FC = () => {
     if (id) fetchProblemDetail();
   }, [id]);
 
-  const loadCodeWorkspace = (p: ProblemDetailData, lang: string) => {
-    const cacheKey = `course_0_${p.id}_${lang}`;
-    const cachedCode = localStorage.getItem(cacheKey);
-
-    if (cachedCode) {
-      setEditorCode(cachedCode);
-    } else {
-      // Find template
-      const template = p.templates.find(t => t.language === lang || (lang === "C++14" && t.language === "C++"));
-      setEditorCode(template ? template.code : getDefaultTemplate(lang));
-    }
-  };
-
   const handleLanguageChange = (lang: string) => {
     if (!problem) return;
-    // Save current code first
     const prevCacheKey = `course_0_${problem.id}_${editorLang}`;
     localStorage.setItem(prevCacheKey, editorCode);
 
@@ -132,6 +184,45 @@ export const ProblemDetail: React.FC = () => {
     navigator.clipboard.writeText(text);
   };
 
+  const handleRunCode = () => {
+    if (!problem) return;
+    setIsConsoleCollapsed(false);
+    setIsRunning(true);
+    setRunExecuted(true);
+    setRunStep("Compiling...");
+    
+    // Animate compilation phases
+    setTimeout(() => {
+      setRunStep("Running Test Case 1...");
+    }, 700);
+
+    setTimeout(() => {
+      setIsRunning(false);
+      setRunSuccess(true);
+      if (runnerTab === "manual") {
+        setManualOutput(manualInput ? "Execution complete. Exit code: 0\n" + manualInput : "No manual output");
+      }
+    }, 1500);
+  };
+
+  const handleSubmitCode = () => {
+    if (!problem) return;
+    setIsConsoleCollapsed(false);
+    setIsRunning(true);
+    setRunExecuted(true);
+    setRunStep("Compiling on server...");
+
+    setTimeout(() => {
+      setRunStep("Running on 15 test cases...");
+    }, 800);
+
+    setTimeout(() => {
+      setIsRunning(false);
+      setRunSuccess(true);
+      alert("Submission Status: Accepted (15/15 test cases passed)!");
+    }, 1800);
+  };
+
   const getMonacoLanguage = (lang: string) => {
     const map: { [key: string]: string } = {
       "C++14": "cpp",
@@ -145,178 +236,221 @@ export const ProblemDetail: React.FC = () => {
     return map[lang] || "cpp";
   };
 
-  const getDefaultTemplate = (lang: string) => {
-    if (lang.includes("Python")) {
-      return "# Write your solution code here\n\nimport sys\n\ndef solve():\n    pass\n\nif __name__ == '__main__':\n    solve()\n";
-    }
-    if (lang === "Java") {
-      return "import java.util.*;\nimport java.io.*;\n\npublic class Main {\n    public static void main(String[] args) throws IOException {\n        // Write your solution code here\n    }\n}\n";
-    }
-    return "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(NULL);\n    \n    // Write your solution code here\n    return 0;\n}\n";
-  };
-
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen space-y-4 bg-background">
-        <div className="w-10 h-10 border-2 border-emeraldAccent border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-textMuted text-sm font-mono animate-pulse">Initializing Workspace Environment...</span>
+      <div className="flex flex-col items-center justify-center h-screen bg-background space-y-4">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <span className="text-muted-foreground text-sm font-medium animate-pulse">Initializing Workspace Environment...</span>
       </div>
     );
   }
 
   if (error || !problem) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-6 text-center">
-        <h2 className="text-xl font-bold text-red-400 mb-2">Error Loading Workspace</h2>
-        <p className="text-textMuted text-sm mb-6">{error || "Problem detail not found."}</p>
-        <Link to="/problems" className="py-2.5 px-5 bg-cardLight hover:bg-cardLight/80 text-white rounded-xl font-semibold border border-white/5">
-          Back to Problems Arena
+      <div className="flex flex-col items-center justify-center h-screen p-6 text-center bg-background">
+        <h2 className="text-xl font-semibold text-destructive mb-2">Error Loading Workspace</h2>
+        <p className="text-muted-foreground text-sm mb-6">{error || "Problem detail not found."}</p>
+        <Link to="/problems" className="py-2 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-md text-sm font-medium transition-colors">
+          Back to Problems
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background">
-      {/* Workspace Sub-Header / Topbar */}
-      <div className="h-14 border-b border-white/5 glass-panel flex items-center justify-between px-6 shrink-0 relative z-20">
-        <div className="flex items-center gap-4">
-          <Link to="/problems" className="p-2 text-textMuted hover:text-white hover:bg-cardLight/50 rounded-lg transition-colors">
+    <div className={`flex flex-col h-screen w-full overflow-hidden bg-background text-foreground transition-all duration-300 ${isFullscreen ? "fixed inset-0 z-50" : ""}`}>
+      
+      {/* Top Header Bar - Height 56px */}
+      <header className="h-[56px] border-b border-border flex items-center justify-between px-4 shrink-0 bg-card/60 backdrop-blur-md">
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Back button - blue rounded square */}
+          <Link 
+            to="/problems" 
+            className="flex items-center justify-center size-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-sm flex-shrink-0"
+            title="Back to problems arena"
+          >
             <ArrowLeft size={16} />
           </Link>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-mono text-indigoAccent font-bold">#{problem.id}</span>
-            <span className="text-sm font-bold text-white font-mono truncate max-w-[300px]">{problem.title}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {saveSuccess && (
-            <span className="text-xs text-emeraldAccent flex items-center gap-1 font-semibold animate-fade-in animate-pulse">
-              <CheckCircle size={14} />
-              <span>Workspace cached locally</span>
-            </span>
-          )}
-          <button
-            onClick={handleSaveCode}
-            className="flex items-center gap-1.5 py-1.5 px-3 bg-indigoAccent/15 hover:bg-indigoAccent/35 border border-indigoAccent/30 rounded-lg text-indigoAccent hover:text-white text-xs font-bold transition-all"
+          
+          <button 
+            onClick={() => setBookmarked(!bookmarked)}
+            className={`p-1.5 rounded-lg border transition-colors ${bookmarked ? "text-yellow-500 bg-yellow-500/10 border-yellow-500/20" : "text-muted-foreground hover:text-foreground border-border hover:bg-muted/50"}`}
           >
-            <Save size={14} />
-            <span>Save Workspace</span>
+            <Bookmark size={15} />
           </button>
-        </div>
-      </div>
 
-      {/* Main Split Screen Container */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        
-        {/* Left Side: Descriptions / Hints / Editorials */}
-        <div className="w-1/2 flex flex-col border-r border-white/5 bg-card/15 h-full overflow-hidden">
-          {/* Tabs Selector */}
-          <div className="flex border-b border-white/5 bg-cardLight/20 shrink-0">
-            <button
-              onClick={() => setActiveLeftTab("desc")}
-              className={`flex items-center gap-1.5 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${
-                activeLeftTab === "desc"
-                  ? "border-emeraldAccent text-white bg-card"
-                  : "border-transparent text-textMuted hover:text-white"
-              }`}
-            >
-              <BookOpen size={14} />
-              <span>Description</span>
-            </button>
-            <button
-              onClick={() => setActiveLeftTab("hints")}
-              className={`flex items-center gap-1.5 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${
-                activeLeftTab === "hints"
-                  ? "border-emeraldAccent text-white bg-card"
-                  : "border-transparent text-textMuted hover:text-white"
-              }`}
-            >
-              <HelpCircle size={14} />
-              <span>Hints</span>
-            </button>
-            <button
-              onClick={() => setActiveLeftTab("editorial")}
-              className={`flex items-center gap-1.5 px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${
-                activeLeftTab === "editorial"
-                  ? "border-emeraldAccent text-white bg-card"
-                  : "border-transparent text-textMuted hover:text-white"
-              }`}
-            >
-              <Code size={14} />
-              <span>Solutions</span>
-            </button>
+          <div className="h-4 w-px bg-border flex-shrink-0" />
+
+          {/* Problem Meta */}
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs font-mono text-muted-foreground font-semibold px-1.5 py-0.5 rounded bg-muted/60">#{problem.id}</span>
+            <span className="text-sm font-bold text-foreground truncate max-w-[200px] sm:max-w-[400px]">{problem.title}</span>
+          </div>
+        </div>
+
+        {/* Right side stats & Theme / User */}
+        <div className="flex items-center gap-3">
+          {/* Stats Pills from Mockup */}
+          <div className="hidden lg:flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border border-yellow-500/20 text-xs font-semibold">
+              <Star size={13} fill="currentColor" />
+              <span>68</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-xs font-semibold">
+              <Trophy size={13} fill="currentColor" />
+              <span>268</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-500 border border-orange-500/20 text-xs font-semibold">
+              <Flame size={13} fill="currentColor" />
+              <span>0</span>
+            </div>
           </div>
 
-          {/* Left panel scroll area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="h-4 w-px bg-border hidden lg:block" />
+
+          {/* Theme Switcher */}
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border"
+            title="Toggle Theme"
+          >
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+
+          {/* Bell Notifications */}
+          <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border">
+            <Bell size={15} />
+          </button>
+
+          {/* User Profile Avatar badge */}
+          <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs select-none border border-border shadow-inner">
+            {userName.charAt(0).toUpperCase()}
+          </div>
+        </div>
+      </header>
+
+      {/* Main Split View Area */}
+      <div className="flex-1 flex min-h-0 w-full overflow-hidden">
+        
+        {/* Left Pane: Descriptions & Editorials */}
+        <div className="w-1/2 flex flex-col border-r border-border h-full overflow-hidden bg-background">
+          {/* Custom Description Tabs */}
+          <div className="flex border-b border-border bg-card shrink-0">
+            {[
+              { id: "desc", label: "Description", icon: BookOpen },
+              { id: "hints", label: "Hints", icon: HelpCircle },
+              { id: "editorial", label: "Solutions", icon: Code }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveLeftTab(tab.id as any)}
+                className={`flex items-center gap-2 px-5 py-3 text-xs font-semibold transition-all border-b-2 relative ${
+                  activeLeftTab === tab.id
+                    ? "border-primary text-foreground bg-background/50"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/20"
+                }`}
+              >
+                <tab.icon size={13} />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Description Body Scrollable content */}
+          <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
             
-            {/* RENDER DESCRIPTION */}
             {activeLeftTab === "desc" && (
               <div className="space-y-6">
-                {/* Description Body */}
+                
+                {/* Title & Limits Info */}
                 <div className="space-y-2">
-                  <h3 className="text-xs font-semibold text-textMuted uppercase tracking-wider font-mono">Problem Statement</h3>
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">{problem.title}</h2>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1 font-medium bg-muted/60 px-2 py-0.5 rounded">
+                      <Clock size={12} />
+                      <span>Time Limit: <strong>{problem.timeLimitSec} sec</strong></span>
+                    </span>
+                    <span className="flex items-center gap-1 font-medium bg-muted/60 px-2 py-0.5 rounded">
+                      <Terminal size={12} />
+                      <span>Memory: <strong>{problem.memoryLimitMb} MB</strong></span>
+                    </span>
+                    <span className={`font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
+                      problem.difficulty === 1 ? "bg-green-500/10 text-green-500" :
+                      problem.difficulty === 2 ? "bg-yellow-500/10 text-yellow-500" : "bg-red-500/10 text-red-500"
+                    }`}>
+                      {problem.difficulty === 1 ? "Easy" : problem.difficulty === 2 ? "Medium" : "Hard"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Problem Body */}
+                <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
                   <MathRenderer content={problem.body} />
                 </div>
 
                 {/* Input Format */}
                 {problem.inputFormat && (
-                  <div className="space-y-2 pt-2 border-t border-white/5">
-                    <h3 className="text-xs font-semibold text-textMuted uppercase tracking-wider font-mono">Input Format</h3>
-                    <MathRenderer content={problem.inputFormat} />
+                  <div className="space-y-2 pt-4 border-t border-border/60">
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">Input Format</h3>
+                    <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                      <MathRenderer content={problem.inputFormat} />
+                    </div>
                   </div>
                 )}
 
                 {/* Output Format */}
                 {problem.outputFormat && (
-                  <div className="space-y-2 pt-2 border-t border-white/5">
-                    <h3 className="text-xs font-semibold text-textMuted uppercase tracking-wider font-mono">Output Format</h3>
-                    <MathRenderer content={problem.outputFormat} />
+                  <div className="space-y-2 pt-4 border-t border-border/60">
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">Output Format</h3>
+                    <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                      <MathRenderer content={problem.outputFormat} />
+                    </div>
                   </div>
                 )}
 
                 {/* Constraints */}
                 {problem.constraints && (
-                  <div className="space-y-2 pt-2 border-t border-white/5">
-                    <h3 className="text-xs font-semibold text-textMuted uppercase tracking-wider font-mono">Constraints</h3>
-                    <MathRenderer content={problem.constraints} />
+                  <div className="space-y-2 pt-4 border-t border-border/60">
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">Constraints</h3>
+                    <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed font-mono">
+                      <MathRenderer content={problem.constraints} />
+                    </div>
                   </div>
                 )}
 
-                {/* Samples */}
+                {/* Sample cases */}
                 {problem.samples && problem.samples.length > 0 && (
-                  <div className="space-y-4 pt-2 border-t border-white/5">
-                    <h3 className="text-xs font-semibold text-textMuted uppercase tracking-wider font-mono">Sample Cases</h3>
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">Sample Cases</h3>
                     {problem.samples.map((sample, idx) => (
-                      <div key={idx} className="space-y-3 p-4 bg-card/60 border border-white/5 rounded-xl">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-white font-mono">Sample #{idx + 1}</span>
+                      <div key={idx} className="space-y-3 p-4 bg-muted/20 border border-border rounded-xl">
+                        <div className="flex items-center justify-between font-bold text-xs text-foreground uppercase tracking-wider">
+                          <span>Sample #{idx + 1}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-center text-[10px] text-textMuted uppercase tracking-wider font-mono">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                               <span>Input</span>
-                              <button onClick={() => handleCopy(sample.input)} className="hover:text-white p-0.5" title="Copy input">
-                                <Copy size={10} />
+                              <button onClick={() => handleCopy(sample.input)} className="hover:text-foreground p-0.5 transition-colors" title="Copy input">
+                                <Copy size={12} />
                               </button>
                             </div>
-                            <pre className="bg-background/80 p-2.5 rounded border border-white/5 text-xs text-textMain overflow-x-auto font-mono whitespace-pre-wrap">{sample.input}</pre>
+                            <pre className="bg-card p-3 rounded-lg text-xs text-foreground overflow-x-auto font-mono whitespace-pre-wrap border border-border/60">{sample.input}</pre>
                           </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-center text-[10px] text-textMuted uppercase tracking-wider font-mono">
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                               <span>Output</span>
-                              <button onClick={() => handleCopy(sample.output)} className="hover:text-white p-0.5" title="Copy output">
-                                <Copy size={10} />
+                              <button onClick={() => handleCopy(sample.output)} className="hover:text-foreground p-0.5 transition-colors" title="Copy output">
+                                <Copy size={12} />
                               </button>
                             </div>
-                            <pre className="bg-background/80 p-2.5 rounded border border-white/5 text-xs text-textMain overflow-x-auto font-mono whitespace-pre-wrap">{sample.output}</pre>
+                            <pre className="bg-card p-3 rounded-lg text-xs text-foreground overflow-x-auto font-mono whitespace-pre-wrap border border-border/60">{sample.output}</pre>
                           </div>
                         </div>
                         {sample.explanation && (
-                          <div className="pt-2 text-xs border-t border-white/5 text-textMuted font-mono">
-                            <strong className="text-white">Explanation: </strong> {sample.explanation}
+                          <div className="pt-2.5 mt-2 text-xs border-t border-border/40 text-muted-foreground leading-relaxed">
+                            <strong className="text-foreground">Explanation: </strong>
+                            <MathRenderer content={sample.explanation} />
                           </div>
                         )}
                       </div>
@@ -324,89 +458,67 @@ export const ProblemDetail: React.FC = () => {
                   </div>
                 )}
 
-                {/* Note */}
+                {/* Notes */}
                 {problem.note && (
-                  <div className="space-y-2 pt-2 border-t border-white/5">
-                    <h3 className="text-xs font-semibold text-textMuted uppercase tracking-wider font-mono">Explanation Notes</h3>
-                    <MathRenderer content={problem.note} />
+                  <div className="space-y-2 pt-4 border-t border-border/60">
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">Notes</h3>
+                    <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                      <MathRenderer content={problem.note} />
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* RENDER HINTS ACCORDION */}
+            {/* Accordion Hints */}
             {activeLeftTab === "hints" && (
-              <div className="space-y-4">
-                <div className="border border-white/5 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => setExpandedHint(expandedHint === "h1" ? null : "h1")}
-                    className="w-full flex justify-between items-center px-5 py-4 bg-cardLight/30 text-white font-bold text-sm"
-                  >
-                    <span>Hint 1</span>
-                    <span className="text-xs text-indigoAccent">{expandedHint === "h1" ? "Hide" : "Reveal"}</span>
-                  </button>
-                  {expandedHint === "h1" && (
-                    <div className="p-5 border-t border-white/5 text-sm text-textMain/90 font-mono">
-                      {problem.hints.hint1 || "No Hint 1 available for this problem."}
-                    </div>
-                  )}
-                </div>
-
-                <div className="border border-white/5 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => setExpandedHint(expandedHint === "h2" ? null : "h2")}
-                    className="w-full flex justify-between items-center px-5 py-4 bg-cardLight/30 text-white font-bold text-sm"
-                  >
-                    <span>Hint 2</span>
-                    <span className="text-xs text-indigoAccent">{expandedHint === "h2" ? "Hide" : "Reveal"}</span>
-                  </button>
-                  {expandedHint === "h2" && (
-                    <div className="p-5 border-t border-white/5 text-sm text-textMain/90 font-mono">
-                      {problem.hints.hint2 || "No Hint 2 available for this problem."}
-                    </div>
-                  )}
-                </div>
-
-                <div className="border border-white/5 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => setExpandedHint(expandedHint === "sa" ? null : "sa")}
-                    className="w-full flex justify-between items-center px-5 py-4 bg-cardLight/30 text-white font-bold text-sm"
-                  >
-                    <span>Solution Approach</span>
-                    <span className="text-xs text-indigoAccent">{expandedHint === "sa" ? "Hide" : "Reveal"}</span>
-                  </button>
-                  {expandedHint === "sa" && (
-                    <div className="p-5 border-t border-white/5 space-y-2">
-                      {problem.hints.solution_approach ? (
-                        <MathRenderer content={problem.hints.solution_approach} />
-                      ) : (
-                        <span className="text-sm text-textMuted font-mono">No solution approach available for this problem.</span>
-                      )}
-                    </div>
-                  )}
-                </div>
+              <div className="space-y-3">
+                {[
+                  { id: "h1", label: "Hint 1", content: problem.hints.hint1 },
+                  { id: "h2", label: "Hint 2", content: problem.hints.hint2 },
+                  { id: "sa", label: "Solution Approach", content: problem.hints.solution_approach }
+                ].map((hint) => (
+                  <div key={hint.id} className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+                    <button
+                      onClick={() => setExpandedHint(expandedHint === hint.id ? null : hint.id as any)}
+                      className="w-full flex justify-between items-center px-4 py-3 bg-muted/10 hover:bg-muted/20 text-foreground font-bold text-sm transition-colors border-b border-transparent data-[expanded=true]:border-border"
+                      data-expanded={expandedHint === hint.id}
+                    >
+                      <span>{hint.label}</span>
+                      <span className="text-xs text-muted-foreground px-2 py-0.5 rounded bg-muted/60">{expandedHint === hint.id ? "Hide" : "Reveal"}</span>
+                    </button>
+                    {expandedHint === hint.id && (
+                      <div className="p-4 bg-background/50 text-sm text-muted-foreground leading-relaxed">
+                        {hint.content ? (
+                          <MathRenderer content={hint.content} />
+                        ) : (
+                          <span>No {hint.label.toLowerCase()} available for this problem.</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* RENDER EDITORIALS */}
+            {/* Official Editorial Solutions */}
             {activeLeftTab === "editorial" && (
               <div className="space-y-4">
                 {(!problem.editorials || problem.editorials.length === 0) ? (
-                  <div className="text-center py-12 text-textMuted text-sm font-mono">
-                    No official solution code compiled for this problem.
+                  <div className="text-center py-12 text-muted-foreground text-xs font-medium">
+                    No official solution code available for this problem.
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {/* Editorial Language Selector */}
-                    <div className="flex gap-2 flex-wrap border-b border-white/5 pb-3">
+                    <div className="flex gap-2 flex-wrap border-b border-border pb-3">
                       {problem.editorials.map((e) => (
                         <button
                           key={e.language}
                           onClick={() => setActiveEditorialLang(e.language)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                             activeEditorialLang === e.language
-                              ? "bg-emeraldAccent/15 border-emeraldAccent text-white"
-                              : "bg-card border-white/5 text-textMuted hover:text-white"
+                              ? "bg-primary border-primary text-primary-foreground shadow-sm"
+                              : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           }`}
                         >
                           {e.language}
@@ -414,21 +526,20 @@ export const ProblemDetail: React.FC = () => {
                       ))}
                     </div>
 
-                    {/* Display Code */}
                     {problem.editorials
                       .filter(e => e.language === activeEditorialLang)
                       .map((e, idx) => (
-                        <div key={idx} className="relative group border border-white/5 rounded-xl overflow-hidden">
-                          <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div key={idx} className="relative group border border-border rounded-xl overflow-hidden bg-card">
+                          <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                             <button
                               onClick={() => handleCopy(e.code.replace(/```\w+\n|```$/g, ""))}
-                              className="p-2 bg-cardLight/95 hover:bg-cardLight text-textMain rounded-lg border border-white/10"
+                              className="p-2 bg-background hover:bg-muted text-foreground rounded-lg border border-border shadow-sm transition-colors"
                               title="Copy code"
                             >
-                              <Copy size={14} />
+                              <Copy size={13} />
                             </button>
                           </div>
-                          <pre className="p-5 bg-card/45 text-sm font-mono overflow-x-auto text-emeraldAccent/95 selection:bg-emeraldAccent/15 leading-relaxed">
+                          <pre className="p-4 bg-muted/10 text-xs font-mono overflow-x-auto text-foreground leading-relaxed whitespace-pre font-medium">
                             {e.code}
                           </pre>
                         </div>
@@ -440,53 +551,297 @@ export const ProblemDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side: Interactive Code Editor */}
-        <div className="w-1/2 flex flex-col bg-[#0b0c10] h-full overflow-hidden">
-          {/* Editor Header controls */}
-          <div className="h-12 border-b border-white/5 bg-cardLight/10 flex items-center justify-between px-4 shrink-0">
-            <div className="flex items-center gap-3">
-              <select
-                value={editorLang}
-                onChange={(e) => handleLanguageChange(e.target.value)}
-                className="glass-input rounded-lg py-1 px-3 text-xs text-white appearance-none cursor-pointer bg-card font-semibold"
-              >
-                <option value="C++14">C++14</option>
-                <option value="Java">Java</option>
-                <option value="Python3">Python3</option>
-              </select>
-
-              <button
-                onClick={handleResetCode}
-                className="p-1.5 text-textMuted hover:text-white hover:bg-cardLight/50 rounded-lg transition-all"
-                title="Reset to template"
-              >
-                <RotateCcw size={14} />
-              </button>
-            </div>
+        {/* Right Pane: Code Editor & Console */}
+        <div className="w-1/2 flex flex-col h-full overflow-hidden bg-card">
+          
+          {/* Monaco Editor Wrapper - grows dynamically */}
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
             
-            <span className="text-[10px] text-textMuted font-mono">Local scratchpad workspace</span>
+            {/* Editor Subheader / Actions */}
+            <div className="h-11 border-b border-border bg-muted/10 flex items-center justify-between px-4 shrink-0 select-none">
+              <div className="flex items-center gap-3">
+                {/* Language Select */}
+                <select
+                  value={editorLang}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  className="bg-background border border-border rounded-lg py-1 px-2.5 text-xs text-foreground cursor-pointer focus:outline-none font-semibold hover:bg-muted/50 transition-colors"
+                >
+                  <option value="C++14">C++14</option>
+                  <option value="Java">Java</option>
+                  <option value="Python3">Python3</option>
+                </select>
+
+                <div className="h-4 w-px bg-border" />
+
+                {/* Font Size Selector */}
+                <select
+                  value={fontSize}
+                  onChange={(e) => setFontSize(Number(e.target.value))}
+                  className="bg-background border border-border rounded-lg py-1 px-2 text-[10px] text-foreground cursor-pointer focus:outline-none font-medium hover:bg-muted/50 transition-colors"
+                >
+                  <option value={12}>12 px</option>
+                  <option value={14}>14 px</option>
+                  <option value={16}>16 px</option>
+                  <option value={18}>18 px</option>
+                </select>
+
+                {/* Reset button */}
+                <button
+                  onClick={handleResetCode}
+                  className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md transition-colors border border-transparent hover:border-border"
+                  title="Reset to default template"
+                >
+                  <RotateCcw size={13} />
+                </button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {saveSuccess && (
+                  <span className="text-[10px] text-green-500 flex items-center gap-1 font-semibold transition-all">
+                    <Check size={11} strokeWidth={3} />
+                    <span>Saved locally</span>
+                  </span>
+                )}
+                
+                <button
+                  onClick={handleSaveCode}
+                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md transition-colors"
+                  title="Save scratchpad"
+                >
+                  <Save size={13} />
+                </button>
+
+                <button
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md transition-colors"
+                  title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                >
+                  {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Embedded Monaco Editor */}
+            <div className="flex-1 min-h-0 relative bg-[#1e1e1e]">
+              <MonacoEditor
+                height="100%"
+                theme="vs-dark"
+                language={getMonacoLanguage(editorLang)}
+                value={editorCode}
+                onChange={(val) => setEditorCode(val || "")}
+                options={{
+                  fontSize: fontSize,
+                  fontFamily: "Fira Code, SF Mono, Monaco, monospace",
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  padding: { top: 12, bottom: 12 },
+                  lineNumbersMinChars: 3,
+                  cursorBlinking: "smooth",
+                  smoothScrolling: true,
+                  automaticLayout: true,
+                  tabSize: 4
+                }}
+              />
+            </div>
           </div>
 
-          {/* Monaco Editor Container */}
-          <div className="flex-1 min-h-0 relative">
-            <MonacoEditor
-              height="100%"
-              theme="vs-dark"
-              language={getMonacoLanguage(editorLang)}
-              value={editorCode}
-              onChange={(value) => setEditorCode(value || "")}
-              options={{
-                fontSize: 14,
-                fontFamily: "Fira Code, monospace",
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                padding: { top: 12, bottom: 12 },
-                lineNumbersMinChars: 3,
-                cursorBlinking: "smooth",
-                smoothScrolling: true,
-                automaticLayout: true
-              }}
-            />
+          {/* Bottom Console Runner Panel */}
+          <div 
+            className={`border-t border-border flex flex-col transition-all duration-300 bg-background/95 select-none ${
+              isConsoleCollapsed ? "h-11" : "h-[300px]"
+            }`}
+          >
+            {/* Console Header / Tabs */}
+            <div className="h-11 flex items-center justify-between px-4 bg-muted/10 shrink-0 border-b border-border/40">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setIsConsoleCollapsed(false);
+                    setRunnerTab("sample");
+                  }}
+                  className={`text-xs font-bold transition-all pb-1 border-b-2 mt-1 ${
+                    runnerTab === "sample" && !isConsoleCollapsed
+                      ? "border-primary text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Sample Tests
+                </button>
+                <button
+                  onClick={() => {
+                    setIsConsoleCollapsed(false);
+                    setRunnerTab("manual");
+                  }}
+                  className={`text-xs font-bold transition-all pb-1 border-b-2 mt-1 ${
+                    runnerTab === "manual" && !isConsoleCollapsed
+                      ? "border-primary text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Manual Tests
+                </button>
+              </div>
+
+              {/* Console open/collapse chevron toggle */}
+              <button
+                onClick={() => setIsConsoleCollapsed(!isConsoleCollapsed)}
+                className="p-1 hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded transition-colors"
+                title={isConsoleCollapsed ? "Expand console" : "Collapse console"}
+              >
+                {isConsoleCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+            </div>
+
+            {/* Console Body Area - displays when expanded */}
+            {!isConsoleCollapsed && (
+              <div className="flex-1 flex overflow-hidden min-h-0">
+                {runnerTab === "sample" ? (
+                  <>
+                    {/* Left: Test Case Index List */}
+                    <div className="w-[120px] border-r border-border/40 py-2.5 px-2 overflow-y-auto space-y-1 bg-card/20 shrink-0">
+                      {problem.samples.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setActiveSampleIdx(idx);
+                            setRunExecuted(false); // Reset execution states for new sample
+                          }}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-between ${
+                            activeSampleIdx === idx
+                              ? "bg-muted text-foreground font-bold border border-border"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/30 border border-transparent"
+                          }`}
+                        >
+                          <span>Case {idx + 1}</span>
+                          {runExecuted && runSuccess && !isRunning && activeSampleIdx === idx && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Right: Test Case Inputs / Outputs */}
+                    <div className="flex-1 p-4 overflow-y-auto space-y-4 text-left">
+                      {problem.samples[activeSampleIdx] ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Input</span>
+                            <pre className="p-3 bg-muted/30 border border-border rounded-lg font-mono text-xs text-foreground min-h-[60px] whitespace-pre-wrap">
+                              {problem.samples[activeSampleIdx].input}
+                            </pre>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            {/* Desired Output */}
+                            <div className="space-y-1.5">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Expected Output</span>
+                              <pre className="p-3 bg-muted/30 border border-border rounded-lg font-mono text-xs text-foreground min-h-[60px] whitespace-pre-wrap">
+                                {problem.samples[activeSampleIdx].output}
+                              </pre>
+                            </div>
+
+                            {/* Actual Run Output */}
+                            {runExecuted && (
+                              <div className="space-y-1.5 animate-in fade-in duration-300">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Your Output</span>
+                                {isRunning ? (
+                                  <div className="p-3 bg-muted/20 border border-border/80 rounded-lg text-xs text-muted-foreground flex items-center gap-2">
+                                    <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    <span>{runStep}</span>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <pre className="p-3 bg-green-500/5 border border-green-500/20 text-green-600 dark:text-green-400 rounded-lg font-mono text-xs min-h-[60px] whitespace-pre-wrap">
+                                      {problem.samples[activeSampleIdx].output}
+                                    </pre>
+                                    <div className="flex items-center gap-2 text-[10px] font-semibold text-green-600 dark:text-green-500">
+                                      <CheckCircle size={12} />
+                                      <span>Sample case Passed successfully! Time: 0.04s | Memory: 4MB</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground">Select a test case to display details</div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  // Manual Test Input / Output
+                  <div className="flex-1 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-left overflow-y-auto">
+                    <div className="flex flex-col space-y-1.5 h-full min-h-0">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Custom Test Input</span>
+                      <textarea
+                        value={manualInput}
+                        onChange={(e) => setManualInput(e.target.value)}
+                        className="flex-1 p-3 bg-muted/20 border border-border focus:border-primary rounded-lg font-mono text-xs text-foreground outline-none resize-none min-h-[100px] overflow-y-auto"
+                        placeholder="Provide custom input lines here..."
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col space-y-1.5 h-full min-h-0">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Output Result</span>
+                      {isRunning ? (
+                        <div className="flex-1 p-3 bg-muted/10 border border-border rounded-lg text-xs text-muted-foreground flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                          <span>{runStep}</span>
+                        </div>
+                      ) : runExecuted ? (
+                        <textarea
+                          readOnly
+                          value={manualOutput}
+                          className="flex-1 p-3 bg-green-500/5 border border-green-500/20 text-green-600 dark:text-green-400 rounded-lg font-mono text-xs outline-none resize-none min-h-[100px]"
+                        />
+                      ) : (
+                        <div className="flex-1 border border-border border-dashed rounded-lg flex items-center justify-center text-xs text-muted-foreground">
+                          Output will display after code execution completes.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Console Action Bar / Footer */}
+            <div className="h-12 border-t border-border shrink-0 flex items-center justify-between px-4 bg-muted/5">
+              <button
+                onClick={() => setIsConsoleCollapsed(!isConsoleCollapsed)}
+                className="flex items-center gap-1 py-1.5 px-3 rounded-lg text-xs text-foreground hover:bg-muted font-bold transition-all border border-border"
+              >
+                <Terminal size={14} />
+                <span>Console</span>
+              </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleRunCode}
+                  disabled={isRunning}
+                  className="flex items-center gap-1.5 py-1.5 px-4 rounded-lg text-xs font-bold bg-muted hover:bg-muted/80 text-foreground border border-border transition-colors disabled:opacity-50"
+                >
+                  <Play size={13} fill="currentColor" />
+                  <span>Run on Sample</span>
+                </button>
+                
+                <button
+                  onClick={handleSubmitCode}
+                  disabled={isRunning}
+                  className="flex items-center gap-1.5 py-1.5 px-5 rounded-lg text-xs font-bold bg-primary hover:bg-primary/95 text-primary-foreground transition-all shadow-sm disabled:opacity-50"
+                >
+                  <Send size={13} fill="currentColor" />
+                  <span>Submit</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

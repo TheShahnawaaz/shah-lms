@@ -69,6 +69,13 @@ class ApiClient {
       body: body ? JSON.stringify(body) : undefined
     });
   }
+
+  delete<T>(endpoint: string, options: RequestInit = {}) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: "DELETE"
+    });
+  }
 }
 
 export const api = new ApiClient();

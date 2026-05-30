@@ -38,44 +38,37 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative">
-      {/* Background glow points */}
-      <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-violetAccent/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-1/3 w-72 h-72 bg-emeraldAccent/10 rounded-full blur-3xl"></div>
-
-      <div className="w-full max-w-md glass-panel rounded-2xl p-8 border border-white/5 relative overflow-hidden">
-        {/* Subtle top indicator line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violetAccent to-emeraldAccent"></div>
-
+    <div className="min-h-screen flex items-center justify-center px-4 bg-background">
+      <div className="w-full max-w-md bg-card rounded-xl p-8 border border-border shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col items-center mb-8">
-          <div className="p-3 bg-indigoAccent/10 rounded-xl border border-indigoAccent/20 mb-3 text-indigoAccent">
+          <div className="p-3 bg-muted rounded-xl border border-border mb-4 text-primary">
             <Terminal size={32} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white font-mono">
-            SHAH<span className="text-emeraldAccent">LMS</span>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            ShahLMS
           </h1>
-          <p className="text-textMuted text-sm mt-1">Register for Learning & Practice</p>
+          <p className="text-muted-foreground text-sm mt-1">Create a new account</p>
         </div>
 
         {error && (
-          <div className="bg-red-900/20 border border-red-900/40 text-red-400 p-3 rounded-lg text-sm mb-5 text-center font-medium">
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-md text-sm mb-5 text-center font-medium">
             {error}
           </div>
         )}
 
         <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-textMuted mb-1.5">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-foreground">
               Full Name
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-textMuted">
-                <User size={18} />
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                <User size={16} />
               </span>
               <input
                 type="text"
                 required
-                className="w-full glass-input rounded-xl py-2.5 pl-10 pr-4 text-sm text-white"
+                className="w-full bg-background border border-input focus:border-primary focus:ring-1 focus:ring-primary rounded-md py-2 pl-9 pr-4 text-sm text-foreground transition-all outline-none"
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -83,18 +76,18 @@ export const Register: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-textMuted mb-1.5">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-foreground">
               Email Address
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-textMuted">
-                <Mail size={18} />
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                <Mail size={16} />
               </span>
               <input
                 type="email"
                 required
-                className="w-full glass-input rounded-xl py-2.5 pl-10 pr-4 text-sm text-white font-mono"
+                className="w-full bg-background border border-input focus:border-primary focus:ring-1 focus:ring-primary rounded-md py-2 pl-9 pr-4 text-sm text-foreground transition-all outline-none"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -102,18 +95,18 @@ export const Register: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-textMuted mb-1.5">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-foreground">
               Password
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-textMuted">
-                <Lock size={18} />
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                <Lock size={16} />
               </span>
               <input
                 type="password"
                 required
-                className="w-full glass-input rounded-xl py-2.5 pl-10 pr-4 text-sm text-white font-mono"
+                className="w-full bg-background border border-input focus:border-primary focus:ring-1 focus:ring-primary rounded-md py-2 pl-9 pr-4 text-sm text-foreground transition-all outline-none"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -121,18 +114,18 @@ export const Register: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-textMuted mb-1.5">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-foreground">
               Confirm Password
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-textMuted">
-                <Lock size={18} />
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                <Lock size={16} />
               </span>
               <input
                 type="password"
                 required
-                className="w-full glass-input rounded-xl py-2.5 pl-10 pr-4 text-sm text-white font-mono"
+                className="w-full bg-background border border-input focus:border-primary focus:ring-1 focus:ring-primary rounded-md py-2 pl-9 pr-4 text-sm text-foreground transition-all outline-none"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -143,15 +136,15 @@ export const Register: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-violetAccent to-indigoAccent hover:from-violetAccent/90 hover:to-indigoAccent/90 transition-all duration-300 shadow-neonViolet disabled:opacity-50 mt-6"
+            className="w-full py-2 px-4 rounded-md font-medium text-primary-foreground bg-primary hover:bg-primary/90 transition-colors disabled:opacity-50 mt-6 text-sm"
           >
             {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-textMuted mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           Already have an account?{" "}
-          <Link to="/login" className="text-emeraldAccent hover:underline font-semibold transition-colors">
+          <Link to="/login" className="text-primary hover:underline font-medium transition-colors">
             Sign In
           </Link>
         </p>

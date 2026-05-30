@@ -33,11 +33,15 @@ async function main() {
   if (emailToPromote) {
     console.log(`Promoting user with email: ${emailToPromote}...`);
     try {
-      const updated = await prisma.user.update({
-        where: { email: emailToPromote },
-        data: { isAdmin: true }
+      const updated = await prisma.user.upsert({
+        where: { email: emailToPromote.trim().toLowerCase() },
+        update: { isAdmin: true },
+        create: {
+          email: emailToPromote.trim().toLowerCase(),
+          isAdmin: true
+        }
       });
-      console.log(`✅ Success! ${updated.email} is now an admin.`);
+      console.log(`✅ Success! ${updated.email} is now safelisted as an admin.`);
     } catch (err: any) {
       console.error(`❌ Promotion failed: ${err.message || err}`);
     }

@@ -23,14 +23,14 @@ export class AdminService {
   }
 
   static async promoteUser(email: string) {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      throw new Error(`User with email ${email} not found.`);
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { email },
-      data: { isAdmin: true },
+    const cleanedEmail = email.trim().toLowerCase();
+    const updatedUser = await prisma.user.upsert({
+      where: { email: cleanedEmail },
+      update: { isAdmin: true },
+      create: {
+        email: cleanedEmail,
+        isAdmin: true
+      },
       select: { id: true, email: true, isAdmin: true }
     });
 
@@ -170,6 +170,49 @@ export class AdminService {
     this.lastSeedStats.errors = [...this.lastSeedStats.errors, ...errors];
 
     return { created, updated, skipped, errors };
+  }
+
+  static async listUsers() {
+    return prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      select: { id: true, email: true, name: true, profilePictureUrl: true, isAdmin: true, createdAt: true }
+    });
+  }
+
+  static async addAllowedUser(email: string, isAdmin: boolean = false) {
+    const cleanedEmail = email.trim().toLowerCase();
+    if (!cleanedEmail) {
+      throw new Error("Email is required.");
+    }
+
+    const existing = await prisma.user.findUnique({ where: { email: cleanedEmail } });
+    if (existing) {
+      throw new Error("User with this email is already safelisted.");
+    }
+
+    return prisma.user.create({
+      data: {
+        email: cleanedEmail,
+        isAdmin
+      },
+      select: { id: true, email: true, name: true, profilePictureUrl: true, isAdmin: true, createdAt: true }
+    });
+  }
+
+  static async deleteUser(id: string, currentAdminId: string) {
+    if (id === currentAdminId) {
+      throw new Error("You cannot remove your own access!");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new Error("User not found.");
+    }
+
+    return prisma.user.delete({
+      where: { id },
+      select: { id: true, email: true }
+    });
   }
 }
 export default AdminService;
