@@ -4,6 +4,8 @@ import api from "../lib/api";
 import Layout from "../components/Layout";
 import { Award, BookOpen, Hash, Flame, ArrowRight } from "lucide-react";
 
+// Trigger Vercel auto-deploy build with new monorepo configuration
+
 interface TagSummary {
   id: string;
   name: string;
