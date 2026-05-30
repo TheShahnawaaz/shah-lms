@@ -163,9 +163,23 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
                       transition={{ duration: 0.12 }}
                       className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card p-1 shadow-lg z-50"
                     >
-                      <div className="px-2 py-1.5 text-left leading-tight border-b border-border/60 pb-2 mb-1">
-                        <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
-                        <div className="text-[10px] text-muted-foreground truncate">{userEmail}</div>
+                      <div className="px-2 py-1.5 text-left border-b border-border/60 pb-2 mb-1 flex items-center gap-2">
+                        {userAvatar ? (
+                          <img
+                            src={userAvatar}
+                            alt={userName}
+                            referrerPolicy="no-referrer"
+                            className="h-8 w-8 rounded-full object-cover border border-border"
+                          />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shrink-0">
+                            {userName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
+                          <div className="text-[10px] text-muted-foreground truncate">{userEmail}</div>
+                        </div>
                       </div>
                       <button
                         onClick={handleLogout}

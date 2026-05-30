@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import morgan from "morgan";
 import authRoutes from "./features/auth/auth.routes";
 import problemRoutes from "./features/problems/problems.routes";
 import adminRoutes from "./features/admin/admin.routes";
@@ -13,6 +14,7 @@ const app = express();
 const port = process.env.PORT || 5001;
 
 // Middlewares
+app.use(morgan("dev"));
 app.use(cors({
   origin: true, // Allow frontend origin
   credentials: true

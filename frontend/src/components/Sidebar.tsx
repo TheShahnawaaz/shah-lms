@@ -26,6 +26,7 @@ function parseJwt(token: string) {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse }) => {
   const [footerOpen, setFooterOpen] = useState(false);
+  const [isHeaderHovered, setIsHeaderHovered] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const footerRef = useRef<HTMLDivElement>(null);
@@ -55,6 +56,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
     navigate("/login");
   };
 
+  const handleSidebarClick = (e: React.MouseEvent) => {
+    if (!isCollapsed) return;
+    const target = e.target as HTMLElement;
+    // Don't expand if user clicked a link, button, dropdown, or input
+    if (target.closest("button") || target.closest("a") || target.closest("input")) {
+      return;
+    }
+    onToggleCollapse();
+  };
+
   // Grouped Navigation configuration
   const groups = [
     {
@@ -79,7 +90,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
       initial={{ width: isCollapsed ? 68 : 240 }}
       animate={{ width: isCollapsed ? 68 : 240 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
-      className="h-screen bg-card border-r border-border flex flex-col flex-shrink-0 z-30 select-none"
+      onClick={handleSidebarClick}
+      className={`h-screen bg-card border-r border-border flex flex-col flex-shrink-0 z-30 select-none ${
+        isCollapsed ? "cursor-pointer" : ""
+      }`}
     >
       {/* Sidebar Header / Branding */}
       <div className="flex items-center justify-between p-4 h-16 border-b border-border">
@@ -96,7 +110,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
               </div>
             </Link>
             <button
-              onClick={onToggleCollapse}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleCollapse();
+              }}
               className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border/40"
               title="Collapse sidebar"
             >
@@ -104,13 +121,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
             </button>
           </>
         ) : (
-          <button
-            onClick={onToggleCollapse}
-            className="w-8 h-8 mx-auto rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center shadow-sm border border-border transition-all duration-200"
+          <div
+            onMouseEnter={() => setIsHeaderHovered(true)}
+            onMouseLeave={() => setIsHeaderHovered(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleCollapse();
+            }}
+            className="w-full flex justify-center cursor-pointer py-1.5"
             title="Expand sidebar"
           >
-            <ChevronRight size={16} />
-          </button>
+            {isHeaderHovered ? (
+              <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center transition-all duration-150">
+                <ChevronRight size={16} />
+              </div>
+            ) : (
+              <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-base shadow-sm border border-border transition-all duration-150">
+                S
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -177,9 +207,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
                   : "left-3 right-3 bottom-full mb-1"
               }`}
             >
-              <div className="px-2 py-1.5 border-b border-border/60 pb-2 mb-1">
-                <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
-                <div className="text-[10px] text-muted-foreground truncate">{userEmail}</div>
+              <div className="px-2 py-1.5 border-b border-border/60 pb-2 mb-1 flex items-center gap-2">
+                {userAvatar ? (
+                  <img
+                    src={userAvatar}
+                    alt={userName}
+                    referrerPolicy="no-referrer"
+                    className="h-8 w-8 rounded-full object-cover border border-border"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shrink-0">
+                    {userName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
+                  <div className="text-[10px] text-muted-foreground truncate">{userEmail}</div>
+                </div>
               </div>
               <button
                 onClick={handleLogout}

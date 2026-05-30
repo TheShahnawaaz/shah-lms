@@ -101,6 +101,12 @@ export const ProblemDetail: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
+  // Custom editor dropdowns
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [fontSizeDropdownOpen, setFontSizeDropdownOpen] = useState(false);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
+  const fontSizeDropdownRef = useRef<HTMLDivElement>(null);
+
   const token = localStorage.getItem("az_auth_token");
   const payload = token ? parseJwt(token) : null;
   const userName = payload?.name || localStorage.getItem("az_user_name") || "Coder";
@@ -111,6 +117,12 @@ export const ProblemDetail: React.FC = () => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setUserDropdownOpen(false);
+      }
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
+        setLangDropdownOpen(false);
+      }
+      if (fontSizeDropdownRef.current && !fontSizeDropdownRef.current.contains(event.target as Node)) {
+        setFontSizeDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -286,7 +298,7 @@ export const ProblemDetail: React.FC = () => {
     <div className={`flex flex-col h-screen w-full overflow-hidden bg-background text-foreground transition-all duration-300 ${isFullscreen ? "fixed inset-0 z-50" : ""}`}>
       
       {/* Top Header Bar - Height 56px */}
-      <header className="h-[56px] border-b border-border flex items-center justify-between px-4 shrink-0 bg-card/60 backdrop-blur-md">
+      <header className="h-[56px] border-b border-border flex items-center justify-between px-4 shrink-0 bg-card/60 backdrop-blur-md relative z-40">
         <div className="flex items-center gap-3 min-w-0">
           {/* Back button - blue rounded square */}
           <Link 
@@ -377,9 +389,23 @@ export const ProblemDetail: React.FC = () => {
                   transition={{ duration: 0.12 }}
                   className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card p-1 shadow-lg z-50"
                 >
-                  <div className="px-2 py-1.5 text-left leading-tight border-b border-border/60 pb-2 mb-1">
-                    <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
-                    <div className="text-[10px] text-muted-foreground truncate">{userEmail}</div>
+                  <div className="px-2 py-1.5 text-left border-b border-border/60 pb-2 mb-1 flex items-center gap-2">
+                    {userAvatar ? (
+                      <img
+                        src={userAvatar}
+                        alt={userName}
+                        referrerPolicy="no-referrer"
+                        className="h-8 w-8 rounded-full object-cover border border-border"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shrink-0">
+                        {userName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">{userEmail}</div>
+                    </div>
                   </div>
                   <button
                     onClick={handleLogout}
@@ -538,32 +564,48 @@ export const ProblemDetail: React.FC = () => {
 
             {/* Accordion Hints */}
             {activeLeftTab === "hints" && (
-              <div className="space-y-3">
-                {[
-                  { id: "h1", label: "Hint 1", content: problem.hints.hint1 },
-                  { id: "h2", label: "Hint 2", content: problem.hints.hint2 },
-                  { id: "sa", label: "Solution Approach", content: problem.hints.solution_approach }
-                ].map((hint) => (
-                  <div key={hint.id} className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
-                    <button
-                      onClick={() => setExpandedHint(expandedHint === hint.id ? null : hint.id as any)}
-                      className="w-full flex justify-between items-center px-4 py-3 bg-muted/10 hover:bg-muted/20 text-foreground font-bold text-sm transition-colors border-b border-transparent data-[expanded=true]:border-border"
-                      data-expanded={expandedHint === hint.id}
-                    >
-                      <span>{hint.label}</span>
-                      <span className="text-xs text-muted-foreground px-2 py-0.5 rounded bg-muted/60">{expandedHint === hint.id ? "Hide" : "Reveal"}</span>
-                    </button>
-                    {expandedHint === hint.id && (
-                      <div className="p-4 bg-background/50 text-sm text-muted-foreground leading-relaxed">
-                        {hint.content ? (
-                          <MathRenderer content={hint.content} />
-                        ) : (
-                          <span>No {hint.label.toLowerCase()} available for this problem.</span>
-                        )}
-                      </div>
-                    )}
+              <div className="space-y-4 animate-in fade-in">
+                {/* Topic Tags */}
+                {problem.tags && problem.tags.length > 0 && (
+                  <div className="border border-border rounded-xl p-4 bg-card shadow-sm space-y-2.5">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Topic Tags</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {problem.tags.map((tag) => (
+                        <span key={tag.name} className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                )}
+
+                <div className="space-y-3">
+                  {[
+                    { id: "h1", label: "Hint 1", content: problem.hints.hint1 },
+                    { id: "h2", label: "Hint 2", content: problem.hints.hint2 },
+                    { id: "sa", label: "Solution Approach", content: problem.hints.solution_approach }
+                  ].map((hint) => (
+                    <div key={hint.id} className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+                      <button
+                        onClick={() => setExpandedHint(expandedHint === hint.id ? null : hint.id as any)}
+                        className="w-full flex justify-between items-center px-4 py-3 bg-muted/10 hover:bg-muted/20 text-foreground font-bold text-sm transition-colors border-b border-transparent data-[expanded=true]:border-border"
+                        data-expanded={expandedHint === hint.id}
+                      >
+                        <span>{hint.label}</span>
+                        <span className="text-xs text-muted-foreground px-2 py-0.5 rounded bg-muted/60">{expandedHint === hint.id ? "Hide" : "Reveal"}</span>
+                      </button>
+                      {expandedHint === hint.id && (
+                        <div className="p-4 bg-background/50 text-sm text-muted-foreground leading-relaxed">
+                          {hint.content ? (
+                            <MathRenderer content={hint.content} />
+                          ) : (
+                            <span>No {hint.label.toLowerCase()} available for this problem.</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -626,30 +668,83 @@ export const ProblemDetail: React.FC = () => {
             {/* Editor Subheader / Actions */}
             <div className="h-11 border-b border-border bg-muted/10 flex items-center justify-between px-4 shrink-0 select-none">
               <div className="flex items-center gap-3">
-                {/* Language Select */}
-                <select
-                  value={editorLang}
-                  onChange={(e) => handleLanguageChange(e.target.value)}
-                  className="bg-background border border-border rounded-lg py-1 px-2.5 text-xs text-foreground cursor-pointer focus:outline-none font-semibold hover:bg-muted/50 transition-colors"
-                >
-                  <option value="C++14">C++14</option>
-                  <option value="Java">Java</option>
-                  <option value="Python3">Python3</option>
-                </select>
+                {/* Language Custom Dropdown */}
+                <div className="relative" ref={langDropdownRef}>
+                  <button
+                    onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                    className="bg-background border border-border rounded-lg py-1 px-2.5 text-xs text-foreground cursor-pointer focus:outline-none font-semibold hover:bg-muted/50 transition-colors flex items-center gap-1.5"
+                  >
+                    <span>{editorLang}</span>
+                    <ChevronDown size={12} className={`text-muted-foreground transition-transform duration-200 ${langDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {langDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        transition={{ duration: 0.12 }}
+                        className="absolute left-0 mt-1 w-32 rounded-lg border border-border bg-card p-1 shadow-lg z-50"
+                      >
+                        {["C++14", "Java", "Python3"].map((lang) => (
+                          <button
+                            key={lang}
+                            onClick={() => {
+                              handleLanguageChange(lang);
+                              setLangDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-semibold hover:bg-muted transition-colors ${
+                              editorLang === lang ? "text-primary bg-primary/5 font-bold" : "text-foreground"
+                            }`}
+                          >
+                            {lang}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 <div className="h-4 w-px bg-border" />
 
-                {/* Font Size Selector */}
-                <select
-                  value={fontSize}
-                  onChange={(e) => setFontSize(Number(e.target.value))}
-                  className="bg-background border border-border rounded-lg py-1 px-2 text-[10px] text-foreground cursor-pointer focus:outline-none font-medium hover:bg-muted/50 transition-colors"
-                >
-                  <option value={12}>12 px</option>
-                  <option value={14}>14 px</option>
-                  <option value={16}>16 px</option>
-                  <option value={18}>18 px</option>
-                </select>
+                {/* Font Size Custom Dropdown */}
+                <div className="relative" ref={fontSizeDropdownRef}>
+                  <button
+                    onClick={() => setFontSizeDropdownOpen(!fontSizeDropdownOpen)}
+                    className="bg-background border border-border rounded-lg py-1 px-2 text-[10px] text-foreground cursor-pointer focus:outline-none font-medium hover:bg-muted/50 transition-colors flex items-center gap-1.5"
+                  >
+                    <span>{fontSize} px</span>
+                    <ChevronDown size={10} className={`text-muted-foreground transition-transform duration-200 ${fontSizeDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {fontSizeDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        transition={{ duration: 0.12 }}
+                        className="absolute left-0 mt-1 w-24 rounded-lg border border-border bg-card p-1 shadow-lg z-50"
+                      >
+                        {[12, 14, 16, 18].map((size) => (
+                          <button
+                            key={size}
+                            onClick={() => {
+                              setFontSize(size);
+                              setFontSizeDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-2 py-1 rounded-md text-[10px] font-semibold hover:bg-muted transition-colors ${
+                              fontSize === size ? "text-primary bg-primary/5 font-bold" : "text-foreground"
+                            }`}
+                          >
+                            {size} px
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* Reset button */}
                 <button
