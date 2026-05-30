@@ -30,6 +30,7 @@ export const Dashboard: React.FC = () => {
   const [tags, setTags] = useState<TagSummary[]>([]);
   const [totalProblems, setTotalProblems] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   const token = localStorage.getItem("az_auth_token");
@@ -38,6 +39,10 @@ export const Dashboard: React.FC = () => {
     const decoded = parseJwt(token);
     isAdmin = !!decoded?.isAdmin;
   }
+
+  const filteredTags = tags.filter((tag) =>
+    tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -149,18 +154,33 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Topic tags distribution */}
           <div className="glass-panel p-6 rounded-2xl md:col-span-2 space-y-4">
-            <h2 className="text-lg font-bold text-white font-mono flex items-center gap-2">
-              <Hash size={18} className="text-indigoAccent" />
-              <span>Browse by Topic</span>
-            </h2>
-            <p className="text-xs text-textMuted">Click a tag name to view related problems.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
+              <div className="space-y-1">
+                <h2 className="text-lg font-bold text-white font-mono flex items-center gap-2">
+                  <Hash size={18} className="text-indigoAccent" />
+                  <span>Browse by Topic</span>
+                </h2>
+                <p className="text-xs text-textMuted">Click a tag name to view related problems.</p>
+              </div>
+              <input
+                type="text"
+                placeholder="Search topic tags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-slate-950/60 border border-slate-800/80 focus:border-indigoAccent/50 rounded-xl px-4 py-2 text-xs text-white focus:outline-none placeholder-slate-500 font-mono transition-all duration-300 w-full sm:w-56"
+              />
+            </div>
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <span className="text-textMuted text-sm font-mono animate-pulse">Loading tags...</span>
               </div>
+            ) : filteredTags.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-500 font-mono text-xs">
+                <span>No matching topics found</span>
+              </div>
             ) : (
               <div className="flex flex-wrap gap-2.5 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
-                {tags.map((tag) => (
+                {filteredTags.map((tag) => (
                   <button
                     key={tag.id}
                     onClick={() => handleTagClick(tag.name)}
@@ -186,33 +206,55 @@ export const Dashboard: React.FC = () => {
               
               {/* Custom CSS Progress Bars */}
               <div className="space-y-4 pt-2">
-                <div className="space-y-1.5">
+                <div 
+                  onClick={() => navigate("/problems?difficulty=1")}
+                  className="space-y-1.5 cursor-pointer group hover:bg-white/5 p-1 px-1.5 -mx-1.5 rounded-xl transition-all duration-200"
+                >
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-emeraldAccent">Easy</span>
+                    <span className="text-emeraldAccent group-hover:underline">Easy</span>
                     <span className="text-textMuted">35%</span>
                   </div>
                   <div className="w-full bg-cardLight h-2 rounded-full overflow-hidden">
-                    <div className="bg-emeraldAccent h-full rounded-full" style={{ width: "35%" }}></div>
+                    <div className="bg-emeraldAccent h-full rounded-full transition-all duration-500" style={{ width: "35%" }}></div>
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
+                <div 
+                  onClick={() => navigate("/problems?difficulty=2")}
+                  className="space-y-1.5 cursor-pointer group hover:bg-white/5 p-1 px-1.5 -mx-1.5 rounded-xl transition-all duration-200"
+                >
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-yellow-500">Medium</span>
-                    <span className="text-textMuted">50%</span>
+                    <span className="text-yellow-500 group-hover:underline">Medium</span>
+                    <span className="text-textMuted">45%</span>
                   </div>
                   <div className="w-full bg-cardLight h-2 rounded-full overflow-hidden">
-                    <div className="bg-yellow-500 h-full rounded-full" style={{ width: "50%" }}></div>
+                    <div className="bg-yellow-500 h-full rounded-full transition-all duration-500" style={{ width: "45%" }}></div>
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
+                <div 
+                  onClick={() => navigate("/problems?difficulty=3")}
+                  className="space-y-1.5 cursor-pointer group hover:bg-white/5 p-1 px-1.5 -mx-1.5 rounded-xl transition-all duration-200"
+                >
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-red-500">Hard</span>
+                    <span className="text-red-500 group-hover:underline">Hard</span>
                     <span className="text-textMuted">15%</span>
                   </div>
                   <div className="w-full bg-cardLight h-2 rounded-full overflow-hidden">
-                    <div className="bg-red-500 h-full rounded-full" style={{ width: "15%" }}></div>
+                    <div className="bg-red-500 h-full rounded-full transition-all duration-500" style={{ width: "15%" }}></div>
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => navigate("/problems?difficulty=4")}
+                  className="space-y-1.5 cursor-pointer group hover:bg-white/5 p-1 px-1.5 -mx-1.5 rounded-xl transition-all duration-200"
+                >
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-fuchsia-500 group-hover:underline">Harder</span>
+                    <span className="text-textMuted">5%</span>
+                  </div>
+                  <div className="w-full bg-cardLight h-2 rounded-full overflow-hidden">
+                    <div className="bg-fuchsia-500 h-full rounded-full transition-all duration-500" style={{ width: "5%" }}></div>
                   </div>
                 </div>
               </div>
