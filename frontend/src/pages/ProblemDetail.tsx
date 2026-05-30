@@ -66,12 +66,52 @@ function parseJwt(token: string) {
   }
 }
 
+function cleanEditorialCode(code: string): string {
+  if (!code) return "";
+  let cleaned = code.trim();
+  
+  let changed = true;
+  while (changed) {
+    changed = false;
+    
+    // Match line-start code fence e.g., ```cpp, ```c++, ```java, etc. followed by newline
+    const matchStart = cleaned.match(/^```[a-zA-Z0-9+#-]*\s*(\r?\n)/i);
+    if (matchStart) {
+      cleaned = cleaned.substring(matchStart[0].length);
+      changed = true;
+    }
+    
+    // Match trailing code fence e.g., ``` at the end (even if no newline before it)
+    if (cleaned.endsWith("```")) {
+      cleaned = cleaned.substring(0, cleaned.length - 3);
+      changed = true;
+    }
+    
+    // Match inline-wrapped single-line code blocks like ```code```
+    if (cleaned.startsWith("```") && cleaned.endsWith("```") && cleaned.length >= 6) {
+      const firstNewlineIdx = cleaned.indexOf("\n");
+      if (firstNewlineIdx !== -1) {
+        cleaned = cleaned.substring(firstNewlineIdx + 1, cleaned.length - 3);
+        changed = true;
+      }
+    }
+    
+    cleaned = cleaned.trim();
+  }
+  
+  return cleaned;
+}
+
 export const ProblemDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [problem, setProblem] = useState<ProblemDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
+
+  // Detect system or explicit light/dark themes
+  const isDarkTheme = theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const monacoTheme = isDarkTheme ? "vs-dark" : "light";
 
   // Tab selections
   const [activeLeftTab, setActiveLeftTab] = useState<"desc" | "hints" | "editorial">("desc");
@@ -83,6 +123,7 @@ export const ProblemDetail: React.FC = () => {
   const [fontSize, setFontSize] = useState<number>(14);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [copiedEditorial, setCopiedEditorial] = useState(false);
   const [expandedHint, setExpandedHint] = useState<"h1" | "h2" | "sa" | null>(null);
 
   // Console runner states
@@ -449,9 +490,10 @@ export const ProblemDetail: React.FC = () => {
           </div>
 
           {/* Description Body Scrollable content */}
-          <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
-            
-            {activeLeftTab === "desc" && (
+          {activeLeftTab !== "editorial" ? (
+            <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
+              
+              {activeLeftTab === "desc" && (
               <div className="space-y-6">
                 
                 {/* Title & Limits Info */}
@@ -608,56 +650,104 @@ export const ProblemDetail: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        ) : (
+          /* Editorial Solutions Container (Fill space, single scrollbar) */
+          <div className="flex-1 flex flex-col min-h-0 p-4 bg-background">
+            {(!problem.editorials || problem.editorials.length === 0) ? (
+              <div className="text-center py-12 text-muted-foreground text-xs font-medium my-auto">
+                No official solution code available for this problem.
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col min-h-0">
+                {problem.editorials
+                  .filter(e => e.language === activeEditorialLang)
+                  .map((e, idx) => {
+                    const cleanedCode = cleanEditorialCode(e.code);
+                    return (
+                      <div key={idx} className="flex-1 flex flex-col border border-border rounded-xl overflow-hidden bg-card shadow-sm min-h-0">
+                        {/* Simulated IDE Editor Header Bar */}
+                        <div className="h-11 border-b border-border bg-[#f8fafc] dark:bg-muted/15 flex items-center justify-between px-4 shrink-0 select-none">
+                          <div className="flex items-center h-full gap-4">
+                            {/* Traffic light circles */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+                              <span className="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+                            </div>
+                            
+                            {/* Simple Language selector pills */}
+                            <div className="flex items-center gap-1 bg-[#f1f5f9] dark:bg-[#0f172a]/30 p-0.5 rounded-lg border border-[#e2e8f0] dark:border-border/30">
+                              {problem.editorials.map((tab) => {
+                                const isActive = activeEditorialLang === tab.language;
+                                const displayLabel = tab.language === "C++14" || tab.language === "C++" ? "C++" : tab.language === "Python3" || tab.language === "Python" ? "Python" : tab.language;
+                                return (
+                                  <button
+                                    key={tab.language}
+                                    onClick={() => setActiveEditorialLang(tab.language)}
+                                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
+                                      isActive
+                                        ? "bg-primary text-primary-foreground shadow-sm"
+                                        : "text-[#64748b] dark:text-muted-foreground hover:text-foreground"
+                                    }`}
+                                  >
+                                    {displayLabel}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
 
-            {/* Official Editorial Solutions */}
-            {activeLeftTab === "editorial" && (
-              <div className="space-y-4">
-                {(!problem.editorials || problem.editorials.length === 0) ? (
-                  <div className="text-center py-12 text-muted-foreground text-xs font-medium">
-                    No official solution code available for this problem.
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex gap-2 flex-wrap border-b border-border pb-3">
-                      {problem.editorials.map((e) => (
-                        <button
-                          key={e.language}
-                          onClick={() => setActiveEditorialLang(e.language)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                            activeEditorialLang === e.language
-                              ? "bg-primary border-primary text-primary-foreground shadow-sm"
-                              : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          }`}
-                        >
-                          {e.language}
-                        </button>
-                      ))}
-                    </div>
-
-                    {problem.editorials
-                      .filter(e => e.language === activeEditorialLang)
-                      .map((e, idx) => (
-                        <div key={idx} className="relative group border border-border rounded-xl overflow-hidden bg-card">
-                          <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] text-muted-foreground bg-muted-foreground/10 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                              Read-Only Mode
+                            </span>
                             <button
-                              onClick={() => handleCopy(e.code.replace(/```\w+\n|```$/g, ""))}
-                              className="p-2 bg-background hover:bg-muted text-foreground rounded-lg border border-border shadow-sm transition-colors"
-                              title="Copy code"
+                              onClick={() => {
+                                handleCopy(cleanedCode);
+                                setCopiedEditorial(true);
+                                setTimeout(() => setCopiedEditorial(false), 2000);
+                              }}
+                              className="p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded transition-colors"
+                              title="Copy clean solution code"
                             >
-                              <Copy size={13} />
+                              {copiedEditorial ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
                             </button>
                           </div>
-                          <pre className="p-4 bg-muted/10 text-xs font-mono overflow-x-auto text-foreground leading-relaxed whitespace-pre font-medium">
-                            {e.code}
-                          </pre>
                         </div>
-                      ))}
-                  </div>
-                )}
+
+                        {/* Monaco Editor Container */}
+                        <div className="flex-1 min-h-0 relative bg-white dark:bg-[#1e1e1e]">
+                          <MonacoEditor
+                            height="100%"
+                            theme={monacoTheme}
+                            language={getMonacoLanguage(e.language)}
+                            value={cleanedCode}
+                            options={{
+                              readOnly: true,
+                              fontSize: 13,
+                              fontFamily: "Fira Code, SF Mono, Monaco, monospace",
+                              minimap: { enabled: false },
+                              scrollBeyondLastLine: false,
+                              padding: { top: 12, bottom: 12 },
+                              lineNumbersMinChars: 3,
+                              cursorBlinking: "smooth",
+                              smoothScrolling: true,
+                              automaticLayout: true,
+                              domReadOnly: true,
+                              contextmenu: false,
+                              mouseWheelZoom: true
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </div>
-        </div>
+        )}
+      </div>
 
         {/* Right Pane: Code Editor & Console */}
         <div className="w-1/2 flex flex-col h-full overflow-hidden bg-card">
@@ -783,10 +873,10 @@ export const ProblemDetail: React.FC = () => {
             </div>
 
             {/* Embedded Monaco Editor */}
-            <div className="flex-1 min-h-0 relative bg-[#1e1e1e]">
+            <div className="flex-1 min-h-0 relative bg-white dark:bg-[#1e1e1e]">
               <MonacoEditor
                 height="100%"
-                theme="vs-dark"
+                theme={monacoTheme}
                 language={getMonacoLanguage(editorLang)}
                 value={editorCode}
                 onChange={(val) => setEditorCode(val || "")}
@@ -800,7 +890,8 @@ export const ProblemDetail: React.FC = () => {
                   cursorBlinking: "smooth",
                   smoothScrolling: true,
                   automaticLayout: true,
-                  tabSize: 4
+                  tabSize: 4,
+                  mouseWheelZoom: true
                 }}
               />
             </div>
