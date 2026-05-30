@@ -159,7 +159,7 @@ export const Dashboard: React.FC = () => {
                 <span className="text-textMuted text-sm font-mono animate-pulse">Loading tags...</span>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-2.5 max-h-[300px] overflow-y-auto pr-2">
+              <div className="flex flex-wrap gap-2.5 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
                 {tags.map((tag) => (
                   <button
                     key={tag.id}
