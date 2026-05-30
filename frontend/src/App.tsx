@@ -5,6 +5,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ProblemList from "./pages/ProblemList";
 import ProblemDetail from "./pages/ProblemDetail";
+import AdminLayout from "./pages/admin/AdminLayout";
+import SeedPage from "./pages/admin/SeedPage";
 
 // Helper component for Route protection
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -46,6 +48,16 @@ export const App: React.FC = () => {
             <ProtectedRoute>
               <ProblemDetail />
             </ProtectedRoute>
+          }
+        />
+
+        {/* Admin Routes */}
+        <Route
+          path="/admin/seed"
+          element={
+            <AdminLayout>
+              <SeedPage />
+            </AdminLayout>
           }
         />
 

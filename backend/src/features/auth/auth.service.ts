@@ -32,7 +32,7 @@ export class AuthService {
       }
     });
 
-    const token = jwt.sign({ id: user.id, email: user.email }, this.jwtSecret, {
+    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.isAdmin }, this.jwtSecret, {
       expiresIn: "7d"
     });
 
@@ -41,7 +41,8 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        isAdmin: user.isAdmin
       }
     };
   }
@@ -61,7 +62,7 @@ export class AuthService {
       throw new Error("Invalid email or password.");
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email }, this.jwtSecret, {
+    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.isAdmin }, this.jwtSecret, {
       expiresIn: "7d"
     });
 
@@ -70,7 +71,8 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        isAdmin: user.isAdmin
       }
     };
   }
@@ -78,7 +80,7 @@ export class AuthService {
   static async getUserProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, createdAt: true }
+      select: { id: true, email: true, name: true, isAdmin: true, createdAt: true }
     });
 
     if (!user) {

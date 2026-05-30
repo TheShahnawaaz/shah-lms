@@ -10,11 +10,34 @@ interface TagSummary {
   problemCount: number;
 }
 
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 export const Dashboard: React.FC = () => {
   const [tags, setTags] = useState<TagSummary[]>([]);
   const [totalProblems, setTotalProblems] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const token = localStorage.getItem("az_auth_token");
+  let isAdmin = false;
+  if (token) {
+    const decoded = parseJwt(token);
+    isAdmin = !!decoded?.isAdmin;
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,11 +66,24 @@ export const Dashboard: React.FC = () => {
     <Layout>
       <div className="p-8 max-w-6xl mx-auto space-y-8 w-full">
         {/* Header */}
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white font-mono">
-            CODER <span className="text-emeraldAccent">DASHBOARD</span>
-          </h1>
-          <p className="text-textMuted">Welcome back. Track your learning progress and tags coverage.</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col gap-1.5">
+            <h1 className="text-3xl font-extrabold tracking-tight text-white font-mono">
+              CODER <span className="text-emeraldAccent">DASHBOARD</span>
+            </h1>
+            <p className="text-textMuted">Welcome back. Track your learning progress and tags coverage.</p>
+          </div>
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin/seed")}
+              className="py-2.5 px-5 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-violet-500/20 hover:shadow-violet-500/40 flex items-center gap-2 self-start md:self-center"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              Admin Panel
+            </button>
+          )}
         </div>
 
         {/* Stats Grid */}

@@ -5,6 +5,7 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
+    isAdmin: boolean;
   };
 }
 
@@ -26,7 +27,7 @@ export function authMiddleware(
 
   try {
     const secret = process.env.JWT_SECRET || "az_practice_secret_jwt_key_987654321";
-    const decoded = jwt.verify(token, secret) as { id: string; email: string };
+    const decoded = jwt.verify(token, secret) as { id: string; email: string; isAdmin: boolean };
     req.user = decoded;
     next();
   } catch (err) {
