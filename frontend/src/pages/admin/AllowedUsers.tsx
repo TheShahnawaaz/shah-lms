@@ -265,6 +265,7 @@ export const AllowedUsers: React.FC = () => {
                               <img 
                                 src={user.profilePictureUrl} 
                                 alt={user.name || "User"} 
+                                referrerPolicy="no-referrer"
                                 className="h-7 w-7 rounded-full object-cover border border-border"
                               />
                             ) : (

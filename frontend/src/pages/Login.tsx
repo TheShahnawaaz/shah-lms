@@ -53,13 +53,18 @@ export const Login: React.FC = () => {
     setLoading(true);
     try {
       const idToken = googleResponse.credential;
-      const response = await api.post<{ token: string; user: { name: string; email: string } }>(
+      const response = await api.post<{ 
+        token: string; 
+        user: { name: string; email: string; profilePictureUrl?: string | null; isAdmin?: boolean } 
+      }>(
         "/auth/login",
         { idToken }
       );
       
       api.setToken(response.data.token);
       localStorage.setItem("az_user_name", response.data.user.name || "Coder");
+      localStorage.setItem("az_user_avatar", response.data.user.profilePictureUrl || "");
+      localStorage.setItem("az_user_email", response.data.user.email || "");
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message || "Google Authentication failed. Are you authorized?");
@@ -77,13 +82,18 @@ export const Login: React.FC = () => {
     setLoading(true);
     try {
       const idToken = `mock_token_${mockEmail.trim().toLowerCase()}`;
-      const response = await api.post<{ token: string; user: { name: string; email: string } }>(
+      const response = await api.post<{ 
+        token: string; 
+        user: { name: string; email: string; profilePictureUrl?: string | null; isAdmin?: boolean } 
+      }>(
         "/auth/login",
         { idToken }
       );
       
       api.setToken(response.data.token);
       localStorage.setItem("az_user_name", response.data.user.name || "Coder");
+      localStorage.setItem("az_user_avatar", response.data.user.profilePictureUrl || "");
+      localStorage.setItem("az_user_email", response.data.user.email || "");
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message || "Mock login failed. Is this email registered in the database?");

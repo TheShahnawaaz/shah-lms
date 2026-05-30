@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import React, { useEffect, useState, useRef } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "../lib/api";
 import MathRenderer from "../components/MathRenderer";
 import MonacoEditor from "@monaco-editor/react";
@@ -7,7 +8,7 @@ import {
   ArrowLeft, BookOpen, Code, Copy, HelpCircle, Save, 
   CheckCircle, RotateCcw, Play, Send, ChevronUp, ChevronDown, 
   Maximize2, Minimize2, Bookmark, Flame, Trophy, Star, Bell, 
-  Terminal, Check, Clock, Sun, Moon
+  Terminal, Check, Clock, Sun, Moon, LogOut
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -96,9 +97,33 @@ export const ProblemDetail: React.FC = () => {
   const [runStep, setRunStep] = useState<string>("");
   const [bookmarked, setBookmarked] = useState(false);
 
+  const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
   const token = localStorage.getItem("az_auth_token");
   const payload = token ? parseJwt(token) : null;
   const userName = payload?.name || localStorage.getItem("az_user_name") || "Coder";
+  const userEmail = localStorage.getItem("az_user_email") || payload?.email || "user@shahlms.com";
+  const userAvatar = localStorage.getItem("az_user_avatar") || "";
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("az_auth_token");
+    localStorage.removeItem("az_user_name");
+    localStorage.removeItem("az_user_avatar");
+    localStorage.removeItem("az_user_email");
+    navigate("/login");
+  };
 
   function getDefaultTemplate(lang: string) {
     if (lang.includes("Python")) {
@@ -322,9 +347,50 @@ export const ProblemDetail: React.FC = () => {
             <Bell size={15} />
           </button>
 
-          {/* User Profile Avatar badge */}
-          <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs select-none border border-border shadow-inner">
-            {userName.charAt(0).toUpperCase()}
+          {/* User Dropdown */}
+          <div className="relative animate-in fade-in" ref={dropdownRef}>
+            <button
+              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+              className="flex items-center gap-1 rounded-lg p-0.5 hover:bg-muted/80 border border-border/60 transition-colors"
+            >
+              {userAvatar ? (
+                <img
+                  src={userAvatar}
+                  alt={userName}
+                  referrerPolicy="no-referrer"
+                  className="h-8 w-8 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                  {userName.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </button>
+
+            {/* Dropdown Menu */}
+            <AnimatePresence>
+              {userDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.12 }}
+                  className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card p-1 shadow-lg z-50"
+                >
+                  <div className="px-2 py-1.5 text-left leading-tight border-b border-border/60 pb-2 mb-1">
+                    <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{userEmail}</div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut size={14} />
+                    <span>Log out</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </header>

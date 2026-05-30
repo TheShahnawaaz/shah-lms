@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Code2, Settings, LogOut, ChevronsUpDown, Users } from "lucide-react";
+import { Home, Code2, Settings, LogOut, ChevronsUpDown, Users, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SidebarProps {
   isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
 function parseJwt(token: string) {
@@ -23,7 +24,7 @@ function parseJwt(token: string) {
   }
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse }) => {
   const [footerOpen, setFooterOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -32,7 +33,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
   const token = localStorage.getItem("az_auth_token");
   const payload = token ? parseJwt(token) : null;
   const userName = payload?.name || localStorage.getItem("az_user_name") || "Coder";
-  const userEmail = payload?.email || "user@shahlms.com";
+  const userEmail = localStorage.getItem("az_user_email") || payload?.email || "user@shahlms.com";
+  const userAvatar = localStorage.getItem("az_user_avatar") || "";
   const isAdmin = payload?.isAdmin || false;
 
   useEffect(() => {
@@ -48,6 +50,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
   const handleLogout = () => {
     localStorage.removeItem("az_auth_token");
     localStorage.removeItem("az_user_name");
+    localStorage.removeItem("az_user_avatar");
+    localStorage.removeItem("az_user_email");
     navigate("/login");
   };
 
@@ -80,22 +84,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
       {/* Sidebar Header / Branding */}
       <div className="flex items-center justify-between p-4 h-16 border-b border-border">
         {!isCollapsed ? (
-          <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
-            {/* Custom geometric logo badge */}
-            <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-base flex-shrink-0 shadow-sm border border-border">
-              S
-            </div>
-            <div className="flex flex-col text-left leading-none min-w-0">
-              <span className="font-bold text-sm text-foreground truncate">ShahLMS</span>
-              <span className="text-[10px] text-muted-foreground font-medium truncate">Admin Panel</span>
-            </div>
-          </Link>
+          <>
+            <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
+              {/* Custom geometric logo badge */}
+              <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-base flex-shrink-0 shadow-sm border border-border">
+                S
+              </div>
+              <div className="flex flex-col text-left leading-none min-w-0">
+                <span className="font-bold text-sm text-foreground truncate">ShahLMS</span>
+                <span className="text-[10px] text-muted-foreground font-medium truncate">Admin Panel</span>
+              </div>
+            </Link>
+            <button
+              onClick={onToggleCollapse}
+              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border/40"
+              title="Collapse sidebar"
+            >
+              <ChevronLeft size={16} />
+            </button>
+          </>
         ) : (
-          <div className="mx-auto">
-            <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-base shadow-sm border border-border">
-              S
-            </div>
-          </div>
+          <button
+            onClick={onToggleCollapse}
+            className="w-8 h-8 mx-auto rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center shadow-sm border border-border transition-all duration-200"
+            title="Expand sidebar"
+          >
+            <ChevronRight size={16} />
+          </button>
         )}
       </div>
 
@@ -153,10 +168,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
           {footerOpen && (
             <motion.div
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: -4, scale: 1 }}
+              animate={{ opacity: 1, y: isCollapsed ? 0 : -4, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.12 }}
-              className="absolute left-3 right-3 bottom-full mb-1 border border-border bg-card p-1 rounded-lg shadow-lg z-50 overflow-hidden"
+              className={`absolute border border-border bg-card p-1 rounded-lg shadow-lg z-50 overflow-hidden ${
+                isCollapsed 
+                  ? "left-[72px] bottom-2 w-56" 
+                  : "left-3 right-3 bottom-full mb-1"
+              }`}
             >
               <div className="px-2 py-1.5 border-b border-border/60 pb-2 mb-1">
                 <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
@@ -181,9 +200,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
           }`}
           title={isCollapsed ? "User Settings" : undefined}
         >
-          <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs flex-shrink-0">
-            {userName.charAt(0).toUpperCase()}
-          </div>
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt={userName}
+              referrerPolicy="no-referrer"
+              className="h-8 w-8 rounded-full object-cover flex-shrink-0 border border-border"
+            />
+          ) : (
+            <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs flex-shrink-0">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+          )}
           {!isCollapsed && (
             <div className="flex-1 min-w-0 flex items-center justify-between">
               <div className="flex flex-col leading-tight min-w-0 pr-1">

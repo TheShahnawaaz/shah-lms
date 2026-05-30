@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Sidebar } from "./Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Sun, Moon, LogOut, Menu } from "lucide-react";
+import { ChevronRight, Sun, Moon, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 
 interface LayoutProps {
@@ -37,7 +37,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
   const token = localStorage.getItem("az_auth_token");
   const payload = token ? parseJwt(token) : null;
   const userName = payload?.name || localStorage.getItem("az_user_name") || "Coder";
-  const userEmail = payload?.email || "user@shahlms.com";
+  const userEmail = localStorage.getItem("az_user_email") || payload?.email || "user@shahlms.com";
+  const userAvatar = localStorage.getItem("az_user_avatar") || "";
   const isAdmin = payload?.isAdmin || false;
 
   useEffect(() => {
@@ -53,6 +54,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
   const handleLogout = () => {
     localStorage.removeItem("az_auth_token");
     localStorage.removeItem("az_user_name");
+    localStorage.removeItem("az_user_avatar");
+    localStorage.removeItem("az_user_email");
     navigate("/login");
   };
 
@@ -84,7 +87,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
       {/* Sidebar - collapsible state is managed here */}
-      <Sidebar isCollapsed={isCollapsed} />
+      <Sidebar isCollapsed={isCollapsed} onToggleCollapse={() => setIsCollapsed(!isCollapsed)} />
 
       {/* Main container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -93,15 +96,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
         {!fullWidth && (
           <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
             <div className="flex items-center gap-3 min-w-0">
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="p-2 -ml-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
-                title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                <Menu size={18} />
-              </button>
-              <div className="h-4 w-px bg-border hidden sm:block" />
-              
               {/* Breadcrumbs */}
               <nav className="hidden sm:flex items-center gap-1.5 text-sm font-medium min-w-0">
                 {breadcrumbs.map((crumb, idx) => {
@@ -139,12 +133,21 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted/80 border border-border/60 transition-colors"
+                  className="flex items-center gap-1 rounded-lg p-1 hover:bg-muted/80 border border-border/60 transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-                    {userName.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="hidden md:flex flex-col text-left leading-tight pr-2">
+                  {userAvatar ? (
+                    <img
+                      src={userAvatar}
+                      alt={userName}
+                      referrerPolicy="no-referrer"
+                      className="h-8 w-8 rounded-full object-cover border border-border"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                      {userName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="hidden md:flex flex-col text-left leading-tight pr-2 pl-1">
                     <span className="text-xs font-semibold text-foreground truncate max-w-[120px]">{userName}</span>
                     <span className="text-[10px] text-muted-foreground">{isAdmin ? "Super Admin" : "User"}</span>
                   </div>
