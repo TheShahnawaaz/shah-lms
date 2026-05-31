@@ -15,6 +15,13 @@ export const Dashboard: React.FC = () => {
   const [totalProblems, setTotalProblems] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [diffStats, setDiffStats] = useState<{ [key: number]: number }>({
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0
+  });
   const navigate = useNavigate();
 
   const filteredTags = tags.filter((tag) =>
@@ -24,13 +31,15 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const tagsResponse = await api.get<TagSummary[]>("/problems/tags");
-        setTags(tagsResponse.data);
+        const [tagsResponse, problemsResponse, statsResponse] = await Promise.all([
+          api.get<TagSummary[]>("/problems/tags"),
+          api.get<{ pagination: { totalCount: number } }>("/problems?limit=1"),
+          api.get<{ difficultyDistribution: { [key: number]: number } }>("/problems/stats")
+        ]);
 
-        const problemsResponse = await api.get<{ pagination: { totalCount: number } }>(
-          "/problems?limit=1"
-        );
+        setTags(tagsResponse.data);
         setTotalProblems(problemsResponse.data.pagination.totalCount);
+        setDiffStats(statsResponse.data.difficultyDistribution);
       } catch (err) {
         console.error("Dashboard error:", err);
       } finally {
@@ -136,31 +145,63 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="p-5 flex-1 flex flex-col justify-between space-y-6">
             <div className="space-y-5">
-              {[
-                { label: "Easy", percent: 35, color: "bg-emerald-500", diffId: 1 },
-                { label: "Medium", percent: 45, color: "bg-amber-500", diffId: 2 },
-                { label: "Hard", percent: 15, color: "bg-red-500", diffId: 3 },
-                { label: "Harder", percent: 5, color: "bg-purple-500", diffId: 4 }
-              ].map((diff) => (
-                <div
-                  key={diff.label}
-                  onClick={() => navigate(`/problems?difficulty=${diff.diffId}`)}
-                  className="group cursor-pointer"
-                >
-                  <div className="flex justify-between text-sm mb-1.5">
-                    <span className="text-foreground font-medium group-hover:underline">
-                      {diff.label}
-                    </span>
-                    <span className="text-muted-foreground text-xs">{diff.percent}%</span>
+              {(() => {
+                const total =
+                  Object.values(diffStats).reduce((a, b) => a + b, 0) || totalProblems || 1;
+                const getPercent = (count: number) => Math.round((count / total) * 100);
+
+                return [
+                  {
+                    label: "Novice",
+                    percent: getPercent(diffStats[1] || 0),
+                    color: "bg-emerald-500",
+                    diffId: 1
+                  },
+                  {
+                    label: "Easy",
+                    percent: getPercent(diffStats[2] || 0),
+                    color: "bg-cyan-500",
+                    diffId: 2
+                  },
+                  {
+                    label: "Medium",
+                    percent: getPercent(diffStats[3] || 0),
+                    color: "bg-amber-500",
+                    diffId: 3
+                  },
+                  {
+                    label: "Hard",
+                    percent: getPercent(diffStats[4] || 0),
+                    color: "bg-red-500",
+                    diffId: 4
+                  },
+                  {
+                    label: "Extreme",
+                    percent: getPercent(diffStats[5] || 0),
+                    color: "bg-purple-500",
+                    diffId: 5
+                  }
+                ].map((diff) => (
+                  <div
+                    key={diff.label}
+                    onClick={() => navigate(`/problems?difficulty=${diff.diffId}`)}
+                    className="group cursor-pointer"
+                  >
+                    <div className="flex justify-between text-sm mb-1.5">
+                      <span className="text-foreground font-medium group-hover:underline">
+                        {diff.label}
+                      </span>
+                      <span className="text-muted-foreground text-xs">{diff.percent}%</span>
+                    </div>
+                    <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${diff.color}`}
+                        style={{ width: `${diff.percent}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${diff.color}`}
-                      style={{ width: `${diff.percent}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
 
             <button

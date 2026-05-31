@@ -185,5 +185,23 @@ export class ProblemsService {
       problemCount: tag._count.problems
     }));
   }
+
+  static async getProblemsStats() {
+    const counts = await prisma.problem.groupBy({
+      by: ["difficulty"],
+      _count: {
+        id: true
+      }
+    });
+
+    const stats: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    counts.forEach((item) => {
+      stats[item.difficulty] = item._count.id;
+    });
+
+    return {
+      difficultyDistribution: stats
+    };
+  }
 }
 export default ProblemsService;

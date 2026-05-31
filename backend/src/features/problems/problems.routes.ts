@@ -9,6 +9,7 @@ router.use(authMiddleware);
 
 router.get("/", ProblemsController.listProblems);
 router.get("/tags", ProblemsController.listTags);
+router.get("/stats", ProblemsController.getProblemsStats);
 router.get("/:id", ProblemsController.getProblemDetail);
 router.post("/:id/bookmark", ProblemsController.bookmarkProblem);
 router.delete("/:id/bookmark", ProblemsController.unbookmarkProblem);

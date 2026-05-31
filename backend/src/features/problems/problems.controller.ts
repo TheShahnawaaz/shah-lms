@@ -154,5 +154,18 @@ export class ProblemsController {
       next(err);
     }
   }
+
+  static async getProblemsStats(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const stats = await ProblemsService.getProblemsStats();
+      res.status(200).json({
+        code: 200,
+        details: "Statistics fetched successfully.",
+        data: stats
+      });
+    } catch (err: any) {
+      next(err);
+    }
+  }
 }
 export default ProblemsController;

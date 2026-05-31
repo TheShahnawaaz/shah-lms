@@ -172,12 +172,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               difficulty === "1"
                 ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10"
                 : difficulty === "2"
-                  ? "border-amber-500/30 text-amber-500 bg-amber-500/5 hover:bg-amber-500/10"
+                  ? "border-cyan-500/30 text-cyan-500 bg-cyan-500/5 hover:bg-cyan-500/10"
                   : difficulty === "3"
-                    ? "border-red-500/30 text-red-500 bg-red-500/5 hover:bg-red-500/10"
+                    ? "border-amber-500/30 text-amber-500 bg-amber-500/5 hover:bg-amber-500/10"
                     : difficulty === "4"
-                      ? "border-purple-500/30 text-purple-500 bg-purple-500/5 hover:bg-purple-500/10"
-                      : ""
+                      ? "border-red-500/30 text-red-500 bg-red-500/5 hover:bg-red-500/10"
+                      : difficulty === "5"
+                        ? "border-purple-500/30 text-purple-500 bg-purple-500/5 hover:bg-purple-500/10"
+                        : ""
             }`}
           >
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground pointer-events-none">
@@ -185,14 +187,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             </span>
             <span className="truncate pr-4">
               {difficulty === "1"
-                ? "Easy"
+                ? "Novice"
                 : difficulty === "2"
-                  ? "Medium"
+                  ? "Easy"
                   : difficulty === "3"
-                    ? "Hard"
+                    ? "Medium"
                     : difficulty === "4"
-                      ? "Harder"
-                      : "All Difficulties"}
+                      ? "Hard"
+                      : difficulty === "5"
+                        ? "Extreme"
+                        : "All Difficulties"}
             </span>
 
             {difficulty && (
@@ -249,7 +253,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         : "text-emerald-600 dark:text-emerald-400 hover:text-emerald-500"
                     }`}
                   >
-                    Easy
+                    Novice
                   </button>
                   <button
                     type="button"
@@ -257,8 +261,22 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       updateFilters({ difficulty: "2" });
                       setDiffDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-amber-500/10 transition-colors ${
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-cyan-500/10 transition-colors ${
                       difficulty === "2"
+                        ? "text-cyan-500 bg-cyan-500/5 font-bold"
+                        : "text-cyan-600 dark:text-cyan-400 hover:text-cyan-500"
+                    }`}
+                  >
+                    Easy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFilters({ difficulty: "3" });
+                      setDiffDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-amber-500/10 transition-colors ${
+                      difficulty === "3"
                         ? "text-amber-500 bg-amber-500/5 font-bold"
                         : "text-amber-600 dark:text-amber-400 hover:text-amber-500"
                     }`}
@@ -268,11 +286,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      updateFilters({ difficulty: "3" });
+                      updateFilters({ difficulty: "4" });
                       setDiffDropdownOpen(false);
                     }}
                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-500/10 transition-colors ${
-                      difficulty === "3"
+                      difficulty === "4"
                         ? "text-red-500 bg-red-500/5 font-bold"
                         : "text-red-600 dark:text-red-400 hover:text-red-500"
                     }`}
@@ -282,16 +300,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      updateFilters({ difficulty: "4" });
+                      updateFilters({ difficulty: "5" });
                       setDiffDropdownOpen(false);
                     }}
                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-purple-500/10 transition-colors ${
-                      difficulty === "4"
+                      difficulty === "5"
                         ? "text-purple-500 bg-purple-500/5 font-bold"
                         : "text-purple-600 dark:text-purple-400 hover:text-purple-500"
                     }`}
                   >
-                    Harder
+                    Extreme
                   </button>
                 </div>
               </motion.div>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import MathRenderer from "../MathRenderer";
 import { BookOpen, HelpCircle, Code, Clock, Terminal, Copy, Check } from "lucide-react";
+import DifficultyBadge from "./DifficultyBadge";
 
 interface Sample {
   input: string;
@@ -168,21 +169,7 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
                       Memory: <strong>{problem.memoryLimitMb} MB</strong>
                     </span>
                   </span>
-                  <span
-                    className={`font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
-                      problem.difficulty === 1
-                        ? "bg-green-500/10 text-green-500"
-                        : problem.difficulty === 2
-                          ? "bg-yellow-500/10 text-yellow-500"
-                          : "bg-red-500/10 text-red-500"
-                    }`}
-                  >
-                    {problem.difficulty === 1
-                      ? "Easy"
-                      : problem.difficulty === 2
-                        ? "Medium"
-                        : "Hard"}
-                  </span>
+                  <DifficultyBadge difficulty={problem.difficulty} variant="detail" />
                 </div>
               </div>
 
