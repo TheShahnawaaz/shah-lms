@@ -30,6 +30,9 @@ interface ConsoleRunnerProps {
   manualOutput: string;
   onRunCode: () => void;
   onSubmitCode: () => void;
+  consoleHeight: number;
+  isConsoleDragging: boolean;
+  onResizeMouseDown: (e: React.MouseEvent) => void;
 }
 
 export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
@@ -49,14 +52,29 @@ export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
   setManualInput,
   manualOutput,
   onRunCode,
-  onSubmitCode
+  onSubmitCode,
+  consoleHeight,
+  isConsoleDragging,
+  onResizeMouseDown
 }) => {
   return (
     <div
-      className={`border-t border-border flex flex-col transition-all duration-300 bg-background/95 select-none ${
-        isConsoleCollapsed ? "h-11" : "h-[300px]"
-      }`}
+      className={`border-t border-border flex flex-col bg-background/95 select-none relative ${
+        isConsoleCollapsed ? "h-11" : ""
+      } ${isConsoleDragging ? "" : "transition-all duration-300"}`}
+      style={!isConsoleCollapsed ? { height: `${consoleHeight}px` } : undefined}
     >
+      {!isConsoleCollapsed && (
+        <div
+          onMouseDown={onResizeMouseDown}
+          className={`h-1 hover:h-1.5 cursor-row-resize select-none absolute top-0 left-0 right-0 z-50 transition-all duration-150 ${
+            isConsoleDragging ? "bg-primary h-1.5" : "bg-border hover:bg-primary/50"
+          }`}
+        >
+          {/* Visual handle indicator */}
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] bg-border/40" />
+        </div>
+      )}
       {/* Console Header / Tabs */}
       <div className="h-11 flex items-center justify-between px-4 bg-muted/10 shrink-0 border-b border-border/40">
         <div className="flex items-center gap-3">

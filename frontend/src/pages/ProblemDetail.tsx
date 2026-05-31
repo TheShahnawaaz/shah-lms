@@ -107,6 +107,9 @@ export const ProblemDetail: React.FC = () => {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const [consoleHeight, setConsoleHeight] = useState<number>(300);
+  const [isConsoleDragging, setIsConsoleDragging] = useState(false);
+
   // Monitor desktop layout state
   useEffect(() => {
     const handleResize = () => {
@@ -151,10 +154,53 @@ export const ProblemDetail: React.FC = () => {
     };
   }, [isDragging]);
 
+  // Monitor mouse move / mouse up for vertical console dragging
+  useEffect(() => {
+    if (!isConsoleDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      // Calculate vertical height: relative to container's bottom edge
+      const newHeight = rect.bottom - e.clientY;
+
+      // Impose boundaries (e.g. min 100px, max container height - 100px)
+      const minHeight = 100;
+      const maxHeight = rect.height - 100;
+
+      if (newHeight >= minHeight && newHeight <= maxHeight) {
+        setConsoleHeight(newHeight);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsConsoleDragging(false);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isConsoleDragging]);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
     document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
+
+  const handleConsoleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsConsoleDragging(true);
+    document.body.style.cursor = "row-resize";
     document.body.style.userSelect = "none";
   };
 
@@ -400,7 +446,10 @@ export const ProblemDetail: React.FC = () => {
           activeMobilePane={activeMobilePane}
           style={
             isDesktop
-              ? { width: "var(--left-panel-width)", pointerEvents: isDragging ? "none" : "auto" }
+              ? {
+                  width: "var(--left-panel-width)",
+                  pointerEvents: isDragging || isConsoleDragging ? "none" : "auto"
+                }
               : undefined
           }
         />
@@ -424,7 +473,7 @@ export const ProblemDetail: React.FC = () => {
             isDesktop
               ? {
                   width: "calc(100% - var(--left-panel-width))",
-                  pointerEvents: isDragging ? "none" : "auto"
+                  pointerEvents: isDragging || isConsoleDragging ? "none" : "auto"
                 }
               : undefined
           }
@@ -463,6 +512,9 @@ export const ProblemDetail: React.FC = () => {
             manualOutput={manualOutput}
             onRunCode={handleRunCode}
             onSubmitCode={handleSubmitCode}
+            consoleHeight={consoleHeight}
+            isConsoleDragging={isConsoleDragging}
+            onResizeMouseDown={handleConsoleResizeMouseDown}
           />
         </div>
       </div>
