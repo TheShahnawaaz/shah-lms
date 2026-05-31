@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Bookmark, Star, Trophy, Flame, Sun, Moon, Bell, LogOut } from "lucide-react";
+import { ArrowLeft, Bookmark, Sun, Moon, LogOut } from "lucide-react";
 
 interface WorkspaceHeaderProps {
   problemId: number;
@@ -80,24 +80,6 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 
       {/* Right side actions */}
       <div className="flex items-center gap-3">
-        {/* Stats Pills */}
-        <div className="hidden lg:flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border border-yellow-500/20 text-xs font-semibold">
-            <Star size={13} fill="currentColor" />
-            <span>68</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-xs font-semibold">
-            <Trophy size={13} fill="currentColor" />
-            <span>268</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-500 border border-orange-500/20 text-xs font-semibold">
-            <Flame size={13} fill="currentColor" />
-            <span>0</span>
-          </div>
-        </div>
-
-        <div className="h-4 w-px bg-border hidden lg:block" />
-
         {/* Theme Switcher */}
         <button
           onClick={onThemeToggle}
@@ -105,11 +87,6 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
           title="Toggle Theme"
         >
           {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
-        </button>
-
-        {/* Bell Notifications */}
-        <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border">
-          <Bell size={15} />
         </button>
 
         {/* User Dropdown */}

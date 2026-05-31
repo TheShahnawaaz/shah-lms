@@ -10,22 +10,10 @@ This document outlines all current frontend-mocked features, hardcoded stats, an
 | :--- | :--- | :--- |
 | **Solved Problems Counter** | Hardcoded to show `0` solved out of the total problems: `0 / {totalProblems}`. | Query the user's successful submission records from a `Submission` model where `status = "ACCEPTED"`. |
 | **Daily Streak Counter** | Hardcoded to `"1 day"`. | Calculate from the user's daily login logs or daily submission timestamps in the database. |
-| **Difficulty Distribution** | Difficulty percentages are hardcoded: Easy (35%), Medium (45%), Hard (15%), Harder (5%). | Dynamically calculate based on the count of active problems per difficulty in the catalog. |
 
 ---
 
-## 2. Problems Arena Header (`ProblemDetail.tsx`)
-
-| Feature | Current Mock Behavior | Future Real Data Implementation |
-| :--- | :--- | :--- |
-| **Star Pill (Points)** | Hardcoded to show `68` stars. | Retrieve cumulative points from the user's score/XP column in the `User` database table. |
-| **Trophy Pill (XP / Rank)** | Hardcoded to show `268` trophies. | Retrieve the user's current rank or contest performance metrics from a leaderboard query. |
-| **Flame Pill (Streak)** | Hardcoded to show `0` flame streak. | Fetch dynamic daily submission streak from the user's profile statistics. |
-| **Notification Bell** | Static icon button with no dropdown or notifications panel. | Fetch dynamic user alerts/announcements from a `Notification` model in the database. |
-
----
-
-## 3. Coding Sandbox & Judge (`ProblemDetail.tsx`)
+## 2. Coding Sandbox & Judge (`ProblemDetail.tsx`)
 
 | Feature | Current Mock Behavior | Future Real Data Implementation |
 | :--- | :--- | :--- |
@@ -35,7 +23,7 @@ This document outlines all current frontend-mocked features, hardcoded stats, an
 
 ---
 
-## 4. Coding Templates (`ProblemDetail.tsx`)
+## 3. Coding Templates (`ProblemDetail.tsx`)
 
 | Feature | Current Mock Behavior | Future Real Data Implementation |
 | :--- | :--- | :--- |
