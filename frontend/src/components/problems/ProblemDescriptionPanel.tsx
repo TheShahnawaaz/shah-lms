@@ -49,6 +49,7 @@ interface ProblemDescriptionPanelProps {
   setActiveEditorialLang: (lang: string) => void;
   monacoTheme: string;
   activeMobilePane: "desc" | "editor";
+  style?: React.CSSProperties;
 }
 
 function cleanEditorialCode(code: string): string {
@@ -94,7 +95,8 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
   activeEditorialLang,
   setActiveEditorialLang,
   monacoTheme,
-  activeMobilePane
+  activeMobilePane,
+  style
 }) => {
   const [expandedHint, setExpandedHint] = useState<"h1" | "h2" | "sa" | null>(null);
   const [copiedEditorial, setCopiedEditorial] = useState(false);
@@ -118,7 +120,8 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
 
   return (
     <div
-      className={`w-full lg:w-1/2 flex flex-col border-r border-border h-full overflow-hidden bg-background ${activeMobilePane === "desc" ? "flex" : "hidden lg:flex"}`}
+      style={style}
+      className={`w-full lg:w-1/2 flex flex-col lg:border-r-0 border-r border-border h-full overflow-hidden bg-background ${activeMobilePane === "desc" ? "flex" : "hidden lg:flex"}`}
     >
       {/* Custom Description Tabs */}
       <div className="flex border-b border-border bg-card shrink-0">

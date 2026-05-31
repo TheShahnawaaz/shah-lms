@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import api from "../lib/api";
@@ -100,6 +100,63 @@ export const ProblemDetail: React.FC = () => {
   const [runExecuted, setRunExecuted] = useState(false);
   const [runStep, setRunStep] = useState<string>("");
   const [bookmarked, setBookmarked] = useState(false);
+
+  // Resize states
+  const [leftWidth, setLeftWidth] = useState<number>(50); // percentage
+  const [isDragging, setIsDragging] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Monitor desktop layout state
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Monitor mouse move / mouse up for drag resizing
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      // Calculate mouse offset relative to the split view container
+      const offset = e.clientX - rect.left;
+      // Calculate percentage relative to container width
+      const newWidth = (offset / rect.width) * 100;
+
+      // Impose boundaries (e.g., between 20% and 80%)
+      if (newWidth >= 20 && newWidth <= 80) {
+        setLeftWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
 
   const navigate = useNavigate();
 
@@ -327,7 +384,11 @@ export const ProblemDetail: React.FC = () => {
       </div>
 
       {/* Main Split View Area */}
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0 w-full overflow-hidden">
+      <div
+        ref={containerRef}
+        className="flex-1 flex flex-col lg:flex-row min-h-0 w-full overflow-hidden"
+        style={{ "--left-panel-width": `${leftWidth}%` } as React.CSSProperties}
+      >
         {/* Left Pane: Description, Hints & Editorials */}
         <ProblemDescriptionPanel
           problem={problem}
@@ -337,10 +398,36 @@ export const ProblemDetail: React.FC = () => {
           setActiveEditorialLang={setActiveEditorialLang}
           monacoTheme={monacoTheme}
           activeMobilePane={activeMobilePane}
+          style={
+            isDesktop
+              ? { width: "var(--left-panel-width)", pointerEvents: isDragging ? "none" : "auto" }
+              : undefined
+          }
         />
+
+        {/* Vertical Resizer Bar */}
+        {isDesktop && (
+          <div
+            onMouseDown={handleMouseDown}
+            className={`w-1 hover:w-1.5 cursor-col-resize select-none h-full relative z-40 transition-colors duration-150 shrink-0 ${
+              isDragging ? "bg-primary w-1.5" : "bg-border hover:bg-primary/50"
+            }`}
+          >
+            {/* Visual handle indicator */}
+            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1px] bg-border/40" />
+          </div>
+        )}
 
         {/* Right Pane: Code Editor & Console */}
         <div
+          style={
+            isDesktop
+              ? {
+                  width: "calc(100% - var(--left-panel-width))",
+                  pointerEvents: isDragging ? "none" : "auto"
+                }
+              : undefined
+          }
           className={`w-full lg:w-1/2 flex flex-col h-full overflow-hidden bg-card ${activeMobilePane === "editor" ? "flex" : "hidden lg:flex"}`}
         >
           <CodeEditorPanel
