@@ -44,9 +44,7 @@ export const Register: React.FC = () => {
           <div className="p-3 bg-muted rounded-xl border border-border mb-4 text-primary">
             <Terminal size={32} />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            ShahLMS
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">ShahLMS</h1>
           <p className="text-muted-foreground text-sm mt-1">Create a new account</p>
         </div>
 
@@ -58,9 +56,7 @@ export const Register: React.FC = () => {
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-foreground">
-              Full Name
-            </label>
+            <label className="block text-xs font-medium text-foreground">Full Name</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
                 <User size={16} />
@@ -77,9 +73,7 @@ export const Register: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-foreground">
-              Email Address
-            </label>
+            <label className="block text-xs font-medium text-foreground">Email Address</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
                 <Mail size={16} />
@@ -96,9 +90,7 @@ export const Register: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-foreground">
-              Password
-            </label>
+            <label className="block text-xs font-medium text-foreground">Password</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
                 <Lock size={16} />
@@ -115,9 +107,7 @@ export const Register: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-foreground">
-              Confirm Password
-            </label>
+            <label className="block text-xs font-medium text-foreground">Confirm Password</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
                 <Lock size={16} />

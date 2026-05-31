@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ArrowLeft, Bookmark, Star, Trophy, Flame, Sun, Moon, Bell, LogOut 
-} from "lucide-react";
+import { ArrowLeft, Bookmark, Star, Trophy, Flame, Sun, Moon, Bell, LogOut } from "lucide-react";
 
 interface WorkspaceHeaderProps {
   problemId: number;
@@ -47,19 +45,19 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
     <header className="h-[56px] border-b border-border flex items-center justify-between px-4 shrink-0 bg-card/60 backdrop-blur-md relative z-40">
       <div className="flex items-center gap-3 min-w-0">
         {/* Back button */}
-        <Link 
-          to="/problems" 
+        <Link
+          to="/problems"
           className="flex items-center justify-center size-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-sm flex-shrink-0"
           title="Back to problems arena"
         >
           <ArrowLeft size={16} />
         </Link>
-        
-        <button 
+
+        <button
           onClick={onBookmarkToggle}
           className={`p-1.5 rounded-lg border transition-colors ${
-            bookmarked 
-              ? "text-yellow-500 bg-yellow-500/10 border-yellow-500/20" 
+            bookmarked
+              ? "text-yellow-500 bg-yellow-500/10 border-yellow-500/20"
               : "text-muted-foreground hover:text-foreground border-border hover:bg-muted/50"
           }`}
           title={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
@@ -71,8 +69,12 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 
         {/* Problem Meta */}
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs font-mono text-muted-foreground font-semibold px-1.5 py-0.5 rounded bg-muted/60">#{problemId}</span>
-          <span className="text-sm font-bold text-foreground truncate max-w-[200px] sm:max-w-[400px]">{problemTitle}</span>
+          <span className="text-xs font-mono text-muted-foreground font-semibold px-1.5 py-0.5 rounded bg-muted/60">
+            #{problemId}
+          </span>
+          <span className="text-sm font-bold text-foreground truncate max-w-[200px] sm:max-w-[400px]">
+            {problemTitle}
+          </span>
         </div>
       </div>
 

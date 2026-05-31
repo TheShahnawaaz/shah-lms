@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ChevronDown, RotateCcw, Save, Maximize2, Minimize2, Check 
-} from "lucide-react";
+import { ChevronDown, RotateCcw, Save, Maximize2, Minimize2, Check } from "lucide-react";
 
 interface CodeEditorPanelProps {
   editorLang: string;
@@ -44,7 +42,10 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
       if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
         setLangDropdownOpen(false);
       }
-      if (fontSizeDropdownRef.current && !fontSizeDropdownRef.current.contains(event.target as Node)) {
+      if (
+        fontSizeDropdownRef.current &&
+        !fontSizeDropdownRef.current.contains(event.target as Node)
+      ) {
         setFontSizeDropdownOpen(false);
       }
     }
@@ -56,11 +57,11 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
     const map: { [key: string]: string } = {
       "C++14": "cpp",
       "C++": "cpp",
-      "C": "cpp",
-      "Python3": "python",
-      "Python": "python",
-      "Java": "java",
-      "JavaScript": "javascript"
+      C: "cpp",
+      Python3: "python",
+      Python: "python",
+      Java: "java",
+      JavaScript: "javascript"
     };
     return map[lang] || "cpp";
   };
@@ -77,7 +78,10 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
               className="bg-background border border-border rounded-lg py-1 px-2.5 text-xs text-foreground cursor-pointer focus:outline-none font-semibold hover:bg-muted/50 transition-colors flex items-center gap-1.5"
             >
               <span>{editorLang}</span>
-              <ChevronDown size={12} className={`text-muted-foreground transition-transform duration-200 ${langDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                size={12}
+                className={`text-muted-foreground transition-transform duration-200 ${langDropdownOpen ? "rotate-180" : ""}`}
+              />
             </button>
 
             <AnimatePresence>
@@ -97,7 +101,9 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
                         setLangDropdownOpen(false);
                       }}
                       className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-semibold hover:bg-muted transition-colors ${
-                        editorLang === lang ? "text-primary bg-primary/5 font-bold" : "text-foreground"
+                        editorLang === lang
+                          ? "text-primary bg-primary/5 font-bold"
+                          : "text-foreground"
                       }`}
                     >
                       {lang}
@@ -117,7 +123,10 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
               className="bg-background border border-border rounded-lg py-1 px-2 text-[10px] text-foreground cursor-pointer focus:outline-none font-medium hover:bg-muted/50 transition-colors flex items-center gap-1.5"
             >
               <span>{fontSize} px</span>
-              <ChevronDown size={10} className={`text-muted-foreground transition-transform duration-200 ${fontSizeDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                size={10}
+                className={`text-muted-foreground transition-transform duration-200 ${fontSizeDropdownOpen ? "rotate-180" : ""}`}
+              />
             </button>
 
             <AnimatePresence>
@@ -137,7 +146,9 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
                         setFontSizeDropdownOpen(false);
                       }}
                       className={`w-full text-left px-2 py-1 rounded-md text-[10px] font-semibold hover:bg-muted transition-colors ${
-                        fontSize === size ? "text-primary bg-primary/5 font-bold" : "text-foreground"
+                        fontSize === size
+                          ? "text-primary bg-primary/5 font-bold"
+                          : "text-foreground"
                       }`}
                     >
                       {size} px
@@ -157,7 +168,7 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
             <RotateCcw size={13} />
           </button>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {saveSuccess && (
             <span className="text-[10px] text-green-500 flex items-center gap-1 font-semibold transition-all">
@@ -165,7 +176,7 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
               <span>Saved locally</span>
             </span>
           )}
-          
+
           <button
             onClick={onSaveCode}
             className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md transition-colors"

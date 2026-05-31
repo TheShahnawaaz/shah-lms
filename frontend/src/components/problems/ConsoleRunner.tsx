@@ -52,7 +52,7 @@ export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
   onSubmitCode
 }) => {
   return (
-    <div 
+    <div
       className={`border-t border-border flex flex-col transition-all duration-300 bg-background/95 select-none ${
         isConsoleCollapsed ? "h-11" : "h-[300px]"
       }`}
@@ -131,16 +131,20 @@ export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
                 {problem.samples[activeSampleIdx] ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Input</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                        Input
+                      </span>
                       <pre className="p-3 bg-muted/30 border border-border rounded-lg font-mono text-xs text-foreground min-h-[60px] whitespace-pre-wrap">
                         {problem.samples[activeSampleIdx].input}
                       </pre>
                     </div>
-                    
+
                     <div className="space-y-4">
                       {/* Desired Output */}
                       <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Expected Output</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                          Expected Output
+                        </span>
                         <pre className="p-3 bg-muted/30 border border-border rounded-lg font-mono text-xs text-foreground min-h-[60px] whitespace-pre-wrap">
                           {problem.samples[activeSampleIdx].output}
                         </pre>
@@ -149,12 +153,26 @@ export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
                       {/* Actual Run Output */}
                       {runExecuted && (
                         <div className="space-y-1.5 animate-in fade-in duration-300">
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Your Output</span>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Your Output
+                          </span>
                           {isRunning ? (
                             <div className="p-3 bg-muted/20 border border-border/80 rounded-lg text-xs text-muted-foreground flex items-center gap-2">
                               <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                  fill="none"
+                                />
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                />
                               </svg>
                               <span>{runStep}</span>
                             </div>
@@ -165,7 +183,9 @@ export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
                               </pre>
                               <div className="flex items-center gap-2 text-[10px] font-semibold text-green-600 dark:text-green-500">
                                 <CheckCircle size={12} />
-                                <span>Sample case Passed successfully! Time: 0.04s | Memory: 4MB</span>
+                                <span>
+                                  Sample case Passed successfully! Time: 0.04s | Memory: 4MB
+                                </span>
                               </div>
                             </div>
                           )}
@@ -174,7 +194,9 @@ export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="text-xs text-muted-foreground">Select a test case to display details</div>
+                  <div className="text-xs text-muted-foreground">
+                    Select a test case to display details
+                  </div>
                 )}
               </div>
             </>
@@ -182,7 +204,9 @@ export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
             // Manual Test Input / Output
             <div className="flex-1 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-left overflow-y-auto">
               <div className="flex flex-col space-y-1.5 h-full min-h-0">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Custom Test Input</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Custom Test Input
+                </span>
                 <textarea
                   value={manualInput}
                   onChange={(e) => setManualInput(e.target.value)}
@@ -190,14 +214,28 @@ export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
                   placeholder="Provide custom input lines here..."
                 />
               </div>
-              
+
               <div className="flex flex-col space-y-1.5 h-full min-h-0">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Output Result</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Output Result
+                </span>
                 {isRunning ? (
                   <div className="flex-1 p-3 bg-muted/10 border border-border rounded-lg text-xs text-muted-foreground flex items-center justify-center gap-2">
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
                     </svg>
                     <span>{runStep}</span>
                   </div>
@@ -237,7 +275,7 @@ export const ConsoleRunner: React.FC<ConsoleRunnerProps> = ({
             <Play size={13} fill="currentColor" />
             <span>Run on Sample</span>
           </button>
-          
+
           <button
             onClick={onSubmitCode}
             disabled={isRunning}

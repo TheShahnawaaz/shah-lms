@@ -62,7 +62,10 @@ export const ProblemTable: React.FC<ProblemTableProps> = ({
                     >
                       <Bookmark size={14} fill={problem.isBookmarked ? "currentColor" : "none"} />
                     </button>
-                    <Link to={`/problems/${problem.id}`} className="font-medium text-foreground group-hover:text-primary transition-colors">
+                    <Link
+                      to={`/problems/${problem.id}`}
+                      className="font-medium text-foreground group-hover:text-primary transition-colors"
+                    >
                       {problem.title}
                     </Link>
                   </div>
@@ -82,7 +85,9 @@ export const ProblemTable: React.FC<ProblemTableProps> = ({
                       </span>
                     ))}
                     {problem.tags.length > 3 && (
-                      <span className="text-[10px] text-muted-foreground align-middle">+{problem.tags.length - 3}</span>
+                      <span className="text-[10px] text-muted-foreground align-middle">
+                        +{problem.tags.length - 3}
+                      </span>
                     )}
                   </div>
                 </td>

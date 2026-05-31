@@ -21,7 +21,7 @@ class ApiClient {
 
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
     const headers = new Headers(options.headers || {});
     headers.set("Content-Type", "application/json");
 

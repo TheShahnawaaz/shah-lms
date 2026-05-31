@@ -15,7 +15,8 @@ function parseJwt(token: string) {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
-      window.atob(base64)
+      window
+        .atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
@@ -64,7 +65,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
   const getBreadcrumbs = () => {
     const parts = location.pathname.split("/").filter(Boolean);
     const crumbs = [{ name: "Home", path: "/dashboard" }];
-    
+
     let currentPath = "";
     parts.forEach((part) => {
       currentPath += `/${part}`;
@@ -75,7 +76,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
       if (!isNaN(Number(part))) name = `#${part}`;
       crumbs.push({ name, path: currentPath });
     });
-    
+
     // De-duplicate if last element is home
     if (crumbs.length > 1 && crumbs[1].path === "/dashboard") {
       crumbs.shift(); // Remove "Home" if the next is "Dashboard"
@@ -88,9 +89,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground transition-colors duration-300 relative">
       {/* Sidebar - collapsible state is managed here */}
-      <Sidebar 
-        isCollapsed={isCollapsed} 
-        onToggleCollapse={() => setIsCollapsed(!isCollapsed)} 
+      <Sidebar
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
         mobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
@@ -110,7 +111,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
 
       {/* Main container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
         {/* Sticky Header - Hides on fullWidth mode */}
         {!fullWidth && (
           <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
@@ -130,9 +130,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
                   const isLast = idx === breadcrumbs.length - 1;
                   return (
                     <div key={crumb.path} className="flex items-center gap-1.5 min-w-0">
-                      {idx > 0 && <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />}
+                      {idx > 0 && (
+                        <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />
+                      )}
                       {isLast ? (
-                        <span className="text-foreground font-semibold truncate max-w-[200px]">{crumb.name}</span>
+                        <span className="text-foreground font-semibold truncate max-w-[200px]">
+                          {crumb.name}
+                        </span>
                       ) : (
                         <Link
                           to={crumb.path}
@@ -176,8 +180,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
                     </div>
                   )}
                   <div className="hidden md:flex flex-col text-left leading-tight pr-2 pl-1">
-                    <span className="text-xs font-semibold text-foreground truncate max-w-[120px]">{userName}</span>
-                    <span className="text-[10px] text-muted-foreground">{isAdmin ? "Super Admin" : "User"}</span>
+                    <span className="text-xs font-semibold text-foreground truncate max-w-[120px]">
+                      {userName}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {isAdmin ? "Super Admin" : "User"}
+                    </span>
                   </div>
                 </button>
 
@@ -205,8 +213,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
                           </div>
                         )}
                         <div className="min-w-0">
-                          <div className="text-xs font-semibold text-foreground truncate">{userName}</div>
-                          <div className="text-[10px] text-muted-foreground truncate">{userEmail}</div>
+                          <div className="text-xs font-semibold text-foreground truncate">
+                            {userName}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground truncate">
+                            {userEmail}
+                          </div>
                         </div>
                       </div>
                       <button

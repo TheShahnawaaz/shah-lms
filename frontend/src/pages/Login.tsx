@@ -22,23 +22,22 @@ export const Login: React.FC = () => {
     script.onload = () => {
       const google = (window as any).google;
       if (google) {
-        const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
-        
+        const client_id =
+          import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+          "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+
         google.accounts.id.initialize({
           client_id: client_id,
-          callback: handleGoogleCredentialResponse,
+          callback: handleGoogleCredentialResponse
         });
 
-        google.accounts.id.renderButton(
-          document.getElementById("google-signin-btn"),
-          { 
-            theme: theme === "dark" ? "filled_black" : "outline", 
-            size: "large", 
-            width: "320",
-            text: "signin_with",
-            shape: "rectangular"
-          }
-        );
+        google.accounts.id.renderButton(document.getElementById("google-signin-btn"), {
+          theme: theme === "dark" ? "filled_black" : "outline",
+          size: "large",
+          width: "320",
+          text: "signin_with",
+          shape: "rectangular"
+        });
       }
     };
 
@@ -53,14 +52,11 @@ export const Login: React.FC = () => {
     setLoading(true);
     try {
       const idToken = googleResponse.credential;
-      const response = await api.post<{ 
-        token: string; 
-        user: { name: string; email: string; profilePictureUrl?: string | null; isAdmin?: boolean } 
-      }>(
-        "/auth/login",
-        { idToken }
-      );
-      
+      const response = await api.post<{
+        token: string;
+        user: { name: string; email: string; profilePictureUrl?: string | null; isAdmin?: boolean };
+      }>("/auth/login", { idToken });
+
       api.setToken(response.data.token);
       localStorage.setItem("az_user_name", response.data.user.name || "Coder");
       localStorage.setItem("az_user_avatar", response.data.user.profilePictureUrl || "");
@@ -77,19 +73,16 @@ export const Login: React.FC = () => {
   const handleMockLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mockEmail) return;
-    
+
     setError(null);
     setLoading(true);
     try {
       const idToken = `mock_token_${mockEmail.trim().toLowerCase()}`;
-      const response = await api.post<{ 
-        token: string; 
-        user: { name: string; email: string; profilePictureUrl?: string | null; isAdmin?: boolean } 
-      }>(
-        "/auth/login",
-        { idToken }
-      );
-      
+      const response = await api.post<{
+        token: string;
+        user: { name: string; email: string; profilePictureUrl?: string | null; isAdmin?: boolean };
+      }>("/auth/login", { idToken });
+
       api.setToken(response.data.token);
       localStorage.setItem("az_user_name", response.data.user.name || "Coder");
       localStorage.setItem("az_user_avatar", response.data.user.profilePictureUrl || "");
@@ -106,7 +99,6 @@ export const Login: React.FC = () => {
     <div className="grid min-h-screen lg:grid-cols-2 bg-background text-foreground transition-colors duration-300">
       {/* Left Panel - Form */}
       <div className="flex flex-col justify-between p-6 md:p-10">
-        
         {/* Header - Logo and Theme Toggle */}
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold text-lg select-none">
@@ -115,7 +107,7 @@ export const Login: React.FC = () => {
             </div>
             <span>ShahLMS</span>
           </Link>
-          
+
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border"
@@ -149,8 +141,20 @@ export const Login: React.FC = () => {
               {loading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
                   </svg>
                   <span>Authenticating...</span>
                 </div>

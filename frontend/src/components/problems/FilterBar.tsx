@@ -76,7 +76,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <TagIcon size={16} />
             </span>
             <span className="truncate pr-4">{selectedTag || "All Topics"}</span>
-            
+
             {selectedTag && (
               <button
                 type="button"
@@ -90,10 +90,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 <X size={12} />
               </button>
             )}
-            
-            <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200 ${tagDropdownOpen ? "rotate-180" : ""}`} />
+
+            <ChevronDown
+              size={14}
+              className={`text-muted-foreground transition-transform duration-200 ${tagDropdownOpen ? "rotate-180" : ""}`}
+            />
           </button>
-          
+
           <AnimatePresence>
             {tagDropdownOpen && (
               <motion.div
@@ -116,7 +119,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     onChange={(e) => setTagSearchQuery(e.target.value)}
                   />
                 </div>
-                
+
                 <div className="max-h-48 overflow-y-auto space-y-0.5">
                   <button
                     type="button"
@@ -141,14 +144,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         setTagSearchQuery("");
                       }}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-muted/50 transition-colors truncate ${
-                        selectedTag === tag.name ? "text-primary bg-primary/5 font-bold" : "text-foreground"
+                        selectedTag === tag.name
+                          ? "text-primary bg-primary/5 font-bold"
+                          : "text-foreground"
                       }`}
                     >
                       {tag.name}
                     </button>
                   ))}
                   {filteredTags.length === 0 && (
-                    <div className="text-[10px] text-muted-foreground text-center py-3">No topics found</div>
+                    <div className="text-[10px] text-muted-foreground text-center py-3">
+                      No topics found
+                    </div>
                   )}
                 </div>
               </motion.div>
@@ -162,22 +169,32 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             type="button"
             onClick={() => setDiffDropdownOpen(!diffDropdownOpen)}
             className={`w-full bg-background border border-input rounded-lg py-2 pl-9 pr-8 text-sm text-left flex items-center justify-between cursor-pointer focus:outline-none hover:bg-muted/30 transition-all font-semibold truncate relative ${
-              difficulty === "1" ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10" :
-              difficulty === "2" ? "border-amber-500/30 text-amber-500 bg-amber-500/5 hover:bg-amber-500/10" :
-              difficulty === "3" ? "border-red-500/30 text-red-500 bg-red-500/5 hover:bg-red-500/10" :
-              difficulty === "4" ? "border-purple-500/30 text-purple-500 bg-purple-500/5 hover:bg-purple-500/10" : ""
+              difficulty === "1"
+                ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10"
+                : difficulty === "2"
+                  ? "border-amber-500/30 text-amber-500 bg-amber-500/5 hover:bg-amber-500/10"
+                  : difficulty === "3"
+                    ? "border-red-500/30 text-red-500 bg-red-500/5 hover:bg-red-500/10"
+                    : difficulty === "4"
+                      ? "border-purple-500/30 text-purple-500 bg-purple-500/5 hover:bg-purple-500/10"
+                      : ""
             }`}
           >
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground pointer-events-none">
               <Filter size={16} />
             </span>
             <span className="truncate pr-4">
-              {difficulty === "1" ? "Easy" :
-               difficulty === "2" ? "Medium" :
-               difficulty === "3" ? "Hard" :
-               difficulty === "4" ? "Harder" : "All Difficulties"}
+              {difficulty === "1"
+                ? "Easy"
+                : difficulty === "2"
+                  ? "Medium"
+                  : difficulty === "3"
+                    ? "Hard"
+                    : difficulty === "4"
+                      ? "Harder"
+                      : "All Difficulties"}
             </span>
-            
+
             {difficulty && (
               <button
                 type="button"
@@ -191,10 +208,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 <X size={12} />
               </button>
             )}
-            
-            <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200 ${diffDropdownOpen ? "rotate-180" : ""}`} />
+
+            <ChevronDown
+              size={14}
+              className={`text-muted-foreground transition-transform duration-200 ${diffDropdownOpen ? "rotate-180" : ""}`}
+            />
           </button>
-          
+
           <AnimatePresence>
             {diffDropdownOpen && (
               <motion.div
@@ -224,7 +244,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       setDiffDropdownOpen(false);
                     }}
                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-500/10 transition-colors ${
-                      difficulty === "1" ? "text-emerald-500 bg-emerald-500/5 font-bold" : "text-emerald-600 dark:text-emerald-400 hover:text-emerald-500"
+                      difficulty === "1"
+                        ? "text-emerald-500 bg-emerald-500/5 font-bold"
+                        : "text-emerald-600 dark:text-emerald-400 hover:text-emerald-500"
                     }`}
                   >
                     Easy
@@ -236,7 +258,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       setDiffDropdownOpen(false);
                     }}
                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-amber-500/10 transition-colors ${
-                      difficulty === "2" ? "text-amber-500 bg-amber-500/5 font-bold" : "text-amber-600 dark:text-amber-400 hover:text-amber-500"
+                      difficulty === "2"
+                        ? "text-amber-500 bg-amber-500/5 font-bold"
+                        : "text-amber-600 dark:text-amber-400 hover:text-amber-500"
                     }`}
                   >
                     Medium
@@ -248,7 +272,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       setDiffDropdownOpen(false);
                     }}
                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-500/10 transition-colors ${
-                      difficulty === "3" ? "text-red-500 bg-red-500/5 font-bold" : "text-red-600 dark:text-red-400 hover:text-red-500"
+                      difficulty === "3"
+                        ? "text-red-500 bg-red-500/5 font-bold"
+                        : "text-red-600 dark:text-red-400 hover:text-red-500"
                     }`}
                   >
                     Hard
@@ -260,7 +286,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       setDiffDropdownOpen(false);
                     }}
                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-purple-500/10 transition-colors ${
-                      difficulty === "4" ? "text-purple-500 bg-purple-500/5 font-bold" : "text-purple-600 dark:text-purple-400 hover:text-purple-500"
+                      difficulty === "4"
+                        ? "text-purple-500 bg-purple-500/5 font-bold"
+                        : "text-purple-600 dark:text-purple-400 hover:text-purple-500"
                     }`}
                   >
                     Harder

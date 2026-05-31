@@ -77,7 +77,10 @@ const PreBlock: React.FC<PreBlockProps> = ({ children, ...props }) => {
             )}
           </button>
         </div>
-        <pre className="p-4 overflow-x-auto text-sm font-mono text-textMain/90 leading-relaxed max-h-[450px]" {...props}>
+        <pre
+          className="p-4 overflow-x-auto text-sm font-mono text-textMain/90 leading-relaxed max-h-[450px]"
+          {...props}
+        >
           {children}
         </pre>
       </div>
@@ -91,9 +94,9 @@ interface MathRendererProps {
 
 function htmlToMarkdown(html: string): string {
   if (!html) return "";
-  
+
   let md = html;
-  
+
   // 1. Replace HTML entities & spaces
   md = md
     .replace(/&lt;/g, "<")
@@ -105,12 +108,15 @@ function htmlToMarkdown(html: string): string {
     .replace(/&nbsp/g, " ");
 
   // 1.5. Convert HTML pre-formatted code blocks to Markdown code blocks
-  md = md.replace(/<pre[^>]*>\s*<code[^>]*class=["']([^"']+)["'][^>]*>([\s\S]*?)<\/code>\s*<\/pre>/gi, (_match, className, code) => {
-    const langMatch = className.match(/language-(\w+)/i);
-    const lang = langMatch ? langMatch[1] : "";
-    return `\n\n\`\`\`${lang}\n${code}\n\`\`\`\n\n`;
-  });
-  
+  md = md.replace(
+    /<pre[^>]*>\s*<code[^>]*class=["']([^"']+)["'][^>]*>([\s\S]*?)<\/code>\s*<\/pre>/gi,
+    (_match, className, code) => {
+      const langMatch = className.match(/language-(\w+)/i);
+      const lang = langMatch ? langMatch[1] : "";
+      return `\n\n\`\`\`${lang}\n${code}\n\`\`\`\n\n`;
+    }
+  );
+
   md = md.replace(/<pre[^>]*>\s*<code[^>]*>([\s\S]*?)<\/code>\s*<\/pre>/gi, (_match, code) => {
     return `\n\n\`\`\`\n${code}\n\`\`\`\n\n`;
   });
@@ -150,9 +156,7 @@ function htmlToMarkdown(html: string): string {
     .replace(/<br\s*\/?>/gi, "\n");
 
   // 5. Handle paragraph tags
-  md = md
-    .replace(/<p[^>]*>/gi, "")
-    .replace(/<\/p>/gi, "\n\n");
+  md = md.replace(/<p[^>]*>/gi, "").replace(/<\/p>/gi, "\n\n");
 
   // 6. Strip any other remaining HTML tags
   md = md.replace(/<[^>]+>/g, "");
@@ -176,12 +180,23 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content }) => {
         remarkPlugins={[remarkMath]}
         rehypePlugins={[rehypeKatex]}
         components={{
-          h1: ({ node, ...props }) => <h1 className="text-xl font-bold mt-4 mb-2 text-white border-b border-borderDark pb-1" {...props} />,
-          h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-3 mb-2 text-white" {...props} />,
-          h3: ({ node, ...props }) => <h3 className="text-base font-bold mt-2 mb-1 text-white" {...props} />,
+          h1: ({ node, ...props }) => (
+            <h1
+              className="text-xl font-bold mt-4 mb-2 text-white border-b border-borderDark pb-1"
+              {...props}
+            />
+          ),
+          h2: ({ node, ...props }) => (
+            <h2 className="text-lg font-bold mt-3 mb-2 text-white" {...props} />
+          ),
+          h3: ({ node, ...props }) => (
+            <h3 className="text-base font-bold mt-2 mb-1 text-white" {...props} />
+          ),
           p: ({ node, ...props }) => <p className="mb-3" {...props} />,
           ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
-          ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />,
+          ol: ({ node, ...props }) => (
+            <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />
+          ),
           li: ({ node, ...props }) => <li className="mb-0.5" {...props} />,
           img: ({ node, ...props }) => (
             <div className="flex justify-center my-4 select-none">
@@ -213,7 +228,10 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content }) => {
               );
             }
             return (
-              <code className="bg-cardLight px-1.5 py-0.5 rounded text-indigoAccent text-sm font-mono border border-borderDark" {...props}>
+              <code
+                className="bg-cardLight px-1.5 py-0.5 rounded text-indigoAccent text-sm font-mono border border-borderDark"
+                {...props}
+              >
                 {children}
               </code>
             );
@@ -224,12 +242,21 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content }) => {
             </div>
           ),
           thead: ({ node, ...props }) => <thead className="bg-cardLight" {...props} />,
-          tbody: ({ node, ...props }) => <tbody className="divide-y divide-borderDark/50" {...props} />,
-          tr: ({ node, ...props }) => <tr className="hover:bg-cardLight/30 transition-colors" {...props} />,
-          th: ({ node, ...props }) => (
-            <th className="px-4 py-2.5 text-left text-xs font-semibold text-textMuted uppercase tracking-wider font-sans border-b border-borderDark" {...props} />
+          tbody: ({ node, ...props }) => (
+            <tbody className="divide-y divide-borderDark/50" {...props} />
           ),
-          td: ({ node, ...props }) => <td className="px-4 py-2 text-sm text-textMain/80 font-mono" {...props} />,
+          tr: ({ node, ...props }) => (
+            <tr className="hover:bg-cardLight/30 transition-colors" {...props} />
+          ),
+          th: ({ node, ...props }) => (
+            <th
+              className="px-4 py-2.5 text-left text-xs font-semibold text-textMuted uppercase tracking-wider font-sans border-b border-borderDark"
+              {...props}
+            />
+          ),
+          td: ({ node, ...props }) => (
+            <td className="px-4 py-2 text-sm text-textMain/80 font-mono" {...props} />
+          )
         }}
       >
         {parsedContent}

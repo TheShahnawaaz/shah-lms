@@ -83,7 +83,11 @@ export const ProblemList: React.FC = () => {
     fetchProblems();
   }, [page, search, difficulty, selectedTag, isBookmarksPage]);
 
-  const handleBookmarkToggle = async (problemId: number, currentStatus: boolean, e: React.MouseEvent) => {
+  const handleBookmarkToggle = async (
+    problemId: number,
+    currentStatus: boolean,
+    e: React.MouseEvent
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     try {
@@ -109,7 +113,7 @@ export const ProblemList: React.FC = () => {
 
   const updateFilters = (newFilters: { [key: string]: string | number }) => {
     const updatedParams = new URLSearchParams(searchParams);
-    
+
     Object.entries(newFilters).forEach(([key, value]) => {
       if (value === "") {
         updatedParams.delete(key);
@@ -168,9 +172,12 @@ export const ProblemList: React.FC = () => {
                 <div className="p-3 bg-muted rounded-full text-muted-foreground mb-4">
                   <Bookmark size={24} className="stroke-[1.5]" />
                 </div>
-                <span className="text-sm mb-2 font-semibold text-foreground">No bookmarks found</span>
+                <span className="text-sm mb-2 font-semibold text-foreground">
+                  No bookmarks found
+                </span>
                 <span className="text-xs mb-6 max-w-sm text-center">
-                  You haven't bookmarked any problems yet. Click the bookmark icon in any problem to save it.
+                  You haven't bookmarked any problems yet. Click the bookmark icon in any problem to
+                  save it.
                 </span>
                 <Link
                   to="/problems"
@@ -209,10 +216,7 @@ export const ProblemList: React.FC = () => {
 
       {/* Pagination */}
       {!loading && problems.length > 0 && (
-        <Pagination
-          pagination={pagination}
-          updateFilters={updateFilters}
-        />
+        <Pagination pagination={pagination} updateFilters={updateFilters} />
       )}
     </div>
   );

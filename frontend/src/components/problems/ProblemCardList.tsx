@@ -43,13 +43,19 @@ export const ProblemCardList: React.FC<ProblemCardListProps> = ({
                   <span className="text-xs font-mono text-muted-foreground font-semibold px-1.5 py-0.5 rounded bg-muted/60">
                     #{problem.id}
                   </span>
-                  <DifficultyBadge difficulty={problem.difficulty} className="text-[10px] font-semibold" />
+                  <DifficultyBadge
+                    difficulty={problem.difficulty}
+                    className="text-[10px] font-semibold"
+                  />
                 </div>
-                <Link to={`/problems/${problem.id}`} className="font-bold text-sm text-foreground hover:text-primary transition-colors block truncate">
+                <Link
+                  to={`/problems/${problem.id}`}
+                  className="font-bold text-sm text-foreground hover:text-primary transition-colors block truncate"
+                >
                   {problem.title}
                 </Link>
               </div>
-              
+
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={(e) => onBookmarkToggle(problem.id, problem.isBookmarked, e)}

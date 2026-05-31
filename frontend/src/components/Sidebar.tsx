@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Code2, Settings, LogOut, ChevronsUpDown, Users, ChevronLeft, ChevronRight, X, Bookmark } from "lucide-react";
+import {
+  Home,
+  Code2,
+  Settings,
+  LogOut,
+  ChevronsUpDown,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Bookmark
+} from "lucide-react";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -15,7 +26,8 @@ function parseJwt(token: string) {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
-      window.atob(base64)
+      window
+        .atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
@@ -26,7 +38,12 @@ function parseJwt(token: string) {
   }
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse, mobileOpen = false, onCloseMobile }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  isCollapsed,
+  onToggleCollapse,
+  mobileOpen = false,
+  onCloseMobile
+}) => {
   const [footerOpen, setFooterOpen] = useState(false);
   const [isHeaderHovered, setIsHeaderHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -85,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse,
       items: [
         { name: "Dashboard", path: "/dashboard", icon: Home },
         { name: "Problems", path: "/problems", icon: Code2 },
-        { name: "Bookmarks", path: "/bookmarks", icon: Bookmark },
+        { name: "Bookmarks", path: "/bookmarks", icon: Bookmark }
       ]
     },
     {
@@ -101,7 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse,
   return (
     <motion.aside
       initial={false}
-      animate={{ width: isMobile ? 240 : (isCollapsed ? 68 : 240) }}
+      animate={{ width: isMobile ? 240 : isCollapsed ? 68 : 240 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
       onClick={handleSidebarClick}
       className={`fixed inset-y-0 left-0 lg:static z-50 lg:z-30 h-screen bg-card border-r border-border flex flex-col flex-shrink-0 select-none transition-transform lg:transition-none duration-300 lg:transform-none ${
@@ -112,14 +129,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse,
       <div className="flex items-center justify-between p-4 h-16 border-b border-border">
         {!isCollapsed || isMobile ? (
           <>
-            <Link to="/dashboard" onClick={onCloseMobile} className="flex items-center gap-2 min-w-0">
+            <Link
+              to="/dashboard"
+              onClick={onCloseMobile}
+              className="flex items-center gap-2 min-w-0"
+            >
               {/* Custom geometric logo badge */}
               <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-base flex-shrink-0 shadow-sm border border-border">
                 S
               </div>
               <div className="flex flex-col text-left leading-none min-w-0">
                 <span className="font-bold text-sm text-foreground truncate">ShahLMS</span>
-                <span className="text-[10px] text-muted-foreground font-medium truncate">Admin Panel</span>
+                <span className="text-[10px] text-muted-foreground font-medium truncate">
+                  Admin Panel
+                </span>
               </div>
             </Link>
             {isMobile ? (
@@ -170,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse,
       {/* Sidebar Menu Scrollable Body */}
       <nav className="flex-1 py-4 flex flex-col gap-6 px-3 overflow-y-auto overflow-x-hidden">
         {groups
-          .filter(group => group.visible !== false)
+          .filter((group) => group.visible !== false)
           .map((group) => (
             <div key={group.label} className="flex flex-col gap-1.5">
               {/* Group Label */}
@@ -182,7 +205,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse,
               {/* Group Items */}
               <div className="flex flex-col gap-1">
                 {group.items.map((item) => {
-                  const isActive = location.pathname === item.path || 
+                  const isActive =
+                    location.pathname === item.path ||
                     (item.path !== "/dashboard" && location.pathname.startsWith(item.path + "/"));
                   const Icon = item.icon;
                   return (
@@ -192,8 +216,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse,
                       onClick={onCloseMobile}
                       className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${
                         isActive
-                           ? "bg-primary text-primary-foreground font-medium"
-                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          ? "bg-primary text-primary-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       } ${isCollapsed && !isMobile ? "justify-center" : ""}`}
                       title={isCollapsed && !isMobile ? item.name : undefined}
                     >
@@ -226,9 +250,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse,
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.12 }}
               className={`absolute border border-border bg-card p-1 rounded-lg shadow-lg z-50 overflow-hidden ${
-                isCollapsed 
-                  ? "left-[72px] bottom-2 w-56" 
-                  : "left-3 right-3 bottom-full mb-1"
+                isCollapsed ? "left-[72px] bottom-2 w-56" : "left-3 right-3 bottom-full mb-1"
               }`}
             >
               <div className="px-2 py-1.5 border-b border-border/60 pb-2 mb-1 flex items-center gap-2">

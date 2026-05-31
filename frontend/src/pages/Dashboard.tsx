@@ -10,14 +10,12 @@ interface TagSummary {
   problemCount: number;
 }
 
-
 export const Dashboard: React.FC = () => {
   const [tags, setTags] = useState<TagSummary[]>([]);
   const [totalProblems, setTotalProblems] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-
 
   const filteredTags = tags.filter((tag) =>
     tag.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -29,7 +27,9 @@ export const Dashboard: React.FC = () => {
         const tagsResponse = await api.get<TagSummary[]>("/problems/tags");
         setTags(tagsResponse.data);
 
-        const problemsResponse = await api.get<{ pagination: { totalCount: number } }>("/problems?limit=1");
+        const problemsResponse = await api.get<{ pagination: { totalCount: number } }>(
+          "/problems?limit=1"
+        );
         setTotalProblems(problemsResponse.data.pagination.totalCount);
       } catch (err) {
         console.error("Dashboard error:", err);
@@ -48,7 +48,7 @@ export const Dashboard: React.FC = () => {
     { label: "Total Problems", value: loading ? "..." : totalProblems, icon: BookOpen },
     { label: "Solved Problems", value: `0 / ${totalProblems}`, icon: Award },
     { label: "Topic Tags", value: loading ? "..." : tags.length, icon: Hash },
-    { label: "Daily Streak", value: "1 day", icon: Flame },
+    { label: "Daily Streak", value: "1 day", icon: Flame }
   ];
 
   return (
@@ -56,7 +56,9 @@ export const Dashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Overview of your progress and learning materials.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Overview of your progress and learning materials.
+          </p>
         </div>
       </div>
 
@@ -68,8 +70,12 @@ export const Dashboard: React.FC = () => {
             className="p-5 rounded-xl border border-border bg-card shadow-sm flex items-start justify-between"
           >
             <div>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</span>
-              <span className="block text-2xl font-semibold text-foreground mt-1">{stat.value}</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {stat.label}
+              </span>
+              <span className="block text-2xl font-semibold text-foreground mt-1">
+                {stat.value}
+              </span>
             </div>
             <div className="p-2 bg-muted rounded-md text-muted-foreground">
               <stat.icon size={20} />
@@ -83,7 +89,9 @@ export const Dashboard: React.FC = () => {
           <div className="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="font-semibold text-foreground">Browse by Topic</h2>
-              <p className="text-xs text-muted-foreground">Select a topic to view related problems.</p>
+              <p className="text-xs text-muted-foreground">
+                Select a topic to view related problems.
+              </p>
             </div>
             <input
               type="text"
@@ -132,7 +140,7 @@ export const Dashboard: React.FC = () => {
                 { label: "Easy", percent: 35, color: "bg-emerald-500", diffId: 1 },
                 { label: "Medium", percent: 45, color: "bg-amber-500", diffId: 2 },
                 { label: "Hard", percent: 15, color: "bg-red-500", diffId: 3 },
-                { label: "Harder", percent: 5, color: "bg-purple-500", diffId: 4 },
+                { label: "Harder", percent: 5, color: "bg-purple-500", diffId: 4 }
               ].map((diff) => (
                 <div
                   key={diff.label}
@@ -140,11 +148,16 @@ export const Dashboard: React.FC = () => {
                   className="group cursor-pointer"
                 >
                   <div className="flex justify-between text-sm mb-1.5">
-                    <span className="text-foreground font-medium group-hover:underline">{diff.label}</span>
+                    <span className="text-foreground font-medium group-hover:underline">
+                      {diff.label}
+                    </span>
                     <span className="text-muted-foreground text-xs">{diff.percent}%</span>
                   </div>
                   <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${diff.color}`} style={{ width: `${diff.percent}%` }}></div>
+                    <div
+                      className={`h-full rounded-full ${diff.color}`}
+                      style={{ width: `${diff.percent}%` }}
+                    ></div>
                   </div>
                 </div>
               ))}

@@ -50,7 +50,8 @@ function parseJwt(token: string) {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
-      window.atob(base64)
+      window
+        .atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
@@ -69,7 +70,11 @@ export const ProblemDetail: React.FC = () => {
   const { theme, setTheme } = useTheme();
 
   // Detect system or explicit light/dark themes
-  const isDarkTheme = theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDarkTheme =
+    theme === "dark" ||
+    (theme === "system" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
   const monacoTheme = isDarkTheme ? "vs-dark" : "light";
 
   // Tab selections
@@ -129,7 +134,9 @@ export const ProblemDetail: React.FC = () => {
     if (cachedCode) {
       setEditorCode(cachedCode);
     } else {
-      const template = p.templates.find(t => t.language === lang || (lang === "C++14" && t.language === "C++"));
+      const template = p.templates.find(
+        (t) => t.language === lang || (lang === "C++14" && t.language === "C++")
+      );
       setEditorCode(template ? template.code : getDefaultTemplate(lang));
     }
   }
@@ -150,7 +157,7 @@ export const ProblemDetail: React.FC = () => {
         const defaultLang = localStorage.getItem("editor-language") || "C++14";
         setEditorLang(defaultLang);
         loadCodeWorkspace(res.data, defaultLang);
-        
+
         // Set manual input to first sample input initially
         if (res.data.samples && res.data.samples.length > 0) {
           setManualInput(res.data.samples[0].input);
@@ -178,7 +185,9 @@ export const ProblemDetail: React.FC = () => {
   const handleResetCode = () => {
     if (!problem) return;
     if (window.confirm("Are you sure you want to reset the editor to the default template?")) {
-      const template = problem.templates.find(t => t.language === editorLang || (editorLang === "C++14" && t.language === "C++"));
+      const template = problem.templates.find(
+        (t) => t.language === editorLang || (editorLang === "C++14" && t.language === "C++")
+      );
       const code = template ? template.code : getDefaultTemplate(editorLang);
       setEditorCode(code);
       localStorage.setItem(`course_0_${problem.id}_${editorLang}`, code);
@@ -214,7 +223,7 @@ export const ProblemDetail: React.FC = () => {
     setIsRunning(true);
     setRunExecuted(true);
     setRunStep("Compiling...");
-    
+
     // Animate compilation phases
     setTimeout(() => {
       setRunStep("Running Test Case 1...");
@@ -224,7 +233,9 @@ export const ProblemDetail: React.FC = () => {
       setIsRunning(false);
       setRunSuccess(true);
       if (runnerTab === "manual") {
-        setManualOutput(manualInput ? "Execution complete. Exit code: 0\n" + manualInput : "No manual output");
+        setManualOutput(
+          manualInput ? "Execution complete. Exit code: 0\n" + manualInput : "No manual output"
+        );
       }
     }, 1500);
   };
@@ -251,7 +262,9 @@ export const ProblemDetail: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background space-y-4">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-muted-foreground text-sm font-medium animate-pulse">Initializing Workspace Environment...</span>
+        <span className="text-muted-foreground text-sm font-medium animate-pulse">
+          Initializing Workspace Environment...
+        </span>
       </div>
     );
   }
@@ -261,7 +274,10 @@ export const ProblemDetail: React.FC = () => {
       <div className="flex flex-col items-center justify-center h-screen p-6 text-center bg-background">
         <h2 className="text-xl font-semibold text-destructive mb-2">Error Loading Workspace</h2>
         <p className="text-muted-foreground text-sm mb-6">{error || "Problem detail not found."}</p>
-        <Link to="/problems" className="py-2 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-md text-sm font-medium transition-colors">
+        <Link
+          to="/problems"
+          className="py-2 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-md text-sm font-medium transition-colors"
+        >
           Back to Problems
         </Link>
       </div>
@@ -269,8 +285,9 @@ export const ProblemDetail: React.FC = () => {
   }
 
   return (
-    <div className={`flex flex-col h-screen w-full overflow-hidden bg-background text-foreground transition-all duration-300 ${isFullscreen ? "fixed inset-0 z-50" : ""}`}>
-      
+    <div
+      className={`flex flex-col h-screen w-full overflow-hidden bg-background text-foreground transition-all duration-300 ${isFullscreen ? "fixed inset-0 z-50" : ""}`}
+    >
       {/* Workspace Header */}
       <WorkspaceHeader
         problemId={problem.id}
@@ -311,7 +328,6 @@ export const ProblemDetail: React.FC = () => {
 
       {/* Main Split View Area */}
       <div className="flex-1 flex flex-col lg:flex-row min-h-0 w-full overflow-hidden">
-        
         {/* Left Pane: Description, Hints & Editorials */}
         <ProblemDescriptionPanel
           problem={problem}
@@ -324,7 +340,9 @@ export const ProblemDetail: React.FC = () => {
         />
 
         {/* Right Pane: Code Editor & Console */}
-        <div className={`w-full lg:w-1/2 flex flex-col h-full overflow-hidden bg-card ${activeMobilePane === "editor" ? "flex" : "hidden lg:flex"}`}>
+        <div
+          className={`w-full lg:w-1/2 flex flex-col h-full overflow-hidden bg-card ${activeMobilePane === "editor" ? "flex" : "hidden lg:flex"}`}
+        >
           <CodeEditorPanel
             editorLang={editorLang}
             onLanguageChange={handleLanguageChange}
@@ -360,7 +378,6 @@ export const ProblemDetail: React.FC = () => {
             onSubmitCode={handleSubmitCode}
           />
         </div>
-
       </div>
     </div>
   );

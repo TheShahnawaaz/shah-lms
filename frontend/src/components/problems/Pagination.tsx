@@ -13,14 +13,12 @@ interface PaginationProps {
   updateFilters: (newFilters: { [key: string]: string | number }) => void;
 }
 
-export const Pagination: React.FC<PaginationProps> = ({
-  pagination,
-  updateFilters
-}) => {
+export const Pagination: React.FC<PaginationProps> = ({ pagination, updateFilters }) => {
   return (
     <div className="flex items-center justify-between text-sm">
       <span className="text-muted-foreground">
-        Showing <span className="font-medium text-foreground">{pagination.page}</span> of <span className="font-medium text-foreground">{pagination.totalPages}</span> pages
+        Showing <span className="font-medium text-foreground">{pagination.page}</span> of{" "}
+        <span className="font-medium text-foreground">{pagination.totalPages}</span> pages
       </span>
       <div className="flex items-center gap-2">
         <button
