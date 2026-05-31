@@ -154,7 +154,7 @@ router.delete(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const currentAdminId = req.user?.id;
-    
+
     if (!currentAdminId) {
       return res.status(401).json({
         code: 401,

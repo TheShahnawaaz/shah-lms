@@ -8,7 +8,9 @@ export class ProblemsController {
       const page = req.query.page ? parseInt(req.query.page as string) : undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       const search = req.query.search as string | undefined;
-      const difficulty = req.query.difficulty ? parseInt(req.query.difficulty as string) : undefined;
+      const difficulty = req.query.difficulty
+        ? parseInt(req.query.difficulty as string)
+        : undefined;
       const tag = req.query.tag as string | undefined;
       const bookmarked = req.query.bookmarked === "true";
 
@@ -21,14 +23,17 @@ export class ProblemsController {
         });
       }
 
-      const result = await ProblemsService.listProblems({
-        page,
-        limit,
-        search,
-        difficulty,
-        tag,
-        bookmarked
-      }, userId);
+      const result = await ProblemsService.listProblems(
+        {
+          page,
+          limit,
+          search,
+          difficulty,
+          tag,
+          bookmarked
+        },
+        userId
+      );
 
       res.status(200).json({
         code: 200,

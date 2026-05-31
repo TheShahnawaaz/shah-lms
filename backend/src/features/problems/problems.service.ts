@@ -81,7 +81,7 @@ export class ProblemsService {
     const totalPages = Math.ceil(totalCount / limit);
 
     return {
-      problems: problems.map(p => ({
+      problems: problems.map((p) => ({
         ...p,
         isBookmarked: p.bookmarks.length > 0,
         bookmarks: undefined
@@ -178,8 +178,8 @@ export class ProblemsService {
         name: "asc"
       }
     });
-    
-    return tags.map(tag => ({
+
+    return tags.map((tag) => ({
       id: tag.id,
       name: tag.name,
       problemCount: tag._count.problems

@@ -26,7 +26,7 @@ export class AuthService {
       try {
         const ticket = await googleClient.verifyIdToken({
           idToken: idToken,
-          audience: process.env.GOOGLE_CLIENT_ID,
+          audience: process.env.GOOGLE_CLIENT_ID
         });
         const payload = ticket.getPayload();
         if (!payload || !payload.email) {
@@ -44,7 +44,9 @@ export class AuthService {
     // Safelist verification - Check if email is in our User table
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new Error("This email is not authorized to access the platform. Please contact the administrator.");
+      throw new Error(
+        "This email is not authorized to access the platform. Please contact the administrator."
+      );
     }
 
     // Sync profile picture and name on login
@@ -60,7 +62,7 @@ export class AuthService {
     if (Object.keys(updatedData).length > 0) {
       loggedInUser = await prisma.user.update({
         where: { email },
-        data: updatedData,
+        data: updatedData
       });
     }
 
@@ -78,7 +80,7 @@ export class AuthService {
         email: loggedInUser.email,
         name: loggedInUser.name,
         profilePictureUrl: loggedInUser.profilePictureUrl,
-        isAdmin: loggedInUser.isAdmin,
+        isAdmin: loggedInUser.isAdmin
       }
     };
   }
@@ -86,13 +88,13 @@ export class AuthService {
   static async getUserProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { 
-        id: true, 
-        email: true, 
-        name: true, 
-        profilePictureUrl: true, 
-        isAdmin: true, 
-        createdAt: true 
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profilePictureUrl: true,
+        isAdmin: true,
+        createdAt: true
       }
     });
 

@@ -55,7 +55,8 @@ export class AdminService {
         }
 
         // Determine hash: use provided hash (computed by sync script or file picker) or generate one
-        const fileHash = data.hash || crypto.createHash("md5").update(JSON.stringify(data)).digest("hex");
+        const fileHash =
+          data.hash || crypto.createHash("md5").update(JSON.stringify(data)).digest("hex");
 
         // Check if problem already exists and if hash is identical
         const existingProblem = await prisma.problem.findUnique({
@@ -101,7 +102,10 @@ export class AdminService {
           note: data.note || null,
           samples: data.samples || [],
           hints: data.hints || {},
-          videoEditorialId: data.video_editorial_id !== undefined && data.video_editorial_id !== null ? data.video_editorial_id.toString() : null,
+          videoEditorialId:
+            data.video_editorial_id !== undefined && data.video_editorial_id !== null
+              ? data.video_editorial_id.toString()
+              : null,
           status: data.status || "PUBLISHED",
           hash: fileHash
         };
@@ -112,14 +116,14 @@ export class AdminService {
           update: {
             ...problemFields,
             tags: {
-              set: tagRecords.map(t => ({ id: t.id }))
+              set: tagRecords.map((t) => ({ id: t.id }))
             }
           },
           create: {
             id: problemId,
             ...problemFields,
             tags: {
-              connect: tagRecords.map(t => ({ id: t.id }))
+              connect: tagRecords.map((t) => ({ id: t.id }))
             }
           }
         });
@@ -175,7 +179,14 @@ export class AdminService {
   static async listUsers() {
     return prisma.user.findMany({
       orderBy: { createdAt: "desc" },
-      select: { id: true, email: true, name: true, profilePictureUrl: true, isAdmin: true, createdAt: true }
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profilePictureUrl: true,
+        isAdmin: true,
+        createdAt: true
+      }
     });
   }
 
@@ -195,7 +206,14 @@ export class AdminService {
         email: cleanedEmail,
         isAdmin
       },
-      select: { id: true, email: true, name: true, profilePictureUrl: true, isAdmin: true, createdAt: true }
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profilePictureUrl: true,
+        isAdmin: true,
+        createdAt: true
+      }
     });
   }
 
