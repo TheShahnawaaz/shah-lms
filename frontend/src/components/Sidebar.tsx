@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Code2, Settings, LogOut, ChevronsUpDown, Users, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Home, Code2, Settings, LogOut, ChevronsUpDown, Users, ChevronLeft, ChevronRight, X, Bookmark } from "lucide-react";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -85,6 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse,
       items: [
         { name: "Dashboard", path: "/dashboard", icon: Home },
         { name: "Problems", path: "/problems", icon: Code2 },
+        { name: "Bookmarks", path: "/bookmarks", icon: Bookmark },
       ]
     },
     {

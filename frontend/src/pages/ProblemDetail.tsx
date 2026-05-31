@@ -208,6 +208,7 @@ export const ProblemDetail: React.FC = () => {
       try {
         const res = await api.get<ProblemDetailData>(`/problems/${id}`);
         setProblem(res.data);
+        setBookmarked((res.data as any).isBookmarked || false);
 
         if (res.data.editorials && res.data.editorials.length > 0) {
           setActiveEditorialLang(res.data.editorials[0].language);
@@ -257,6 +258,21 @@ export const ProblemDetail: React.FC = () => {
     localStorage.setItem(cacheKey, editorCode);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2000);
+  };
+
+  const handleBookmarkToggle = async () => {
+    if (!problem) return;
+    try {
+      if (bookmarked) {
+        await api.delete(`/problems/${problem.id}/bookmark`);
+        setBookmarked(false);
+      } else {
+        await api.post(`/problems/${problem.id}/bookmark`);
+        setBookmarked(true);
+      }
+    } catch (err: any) {
+      console.error("Failed to toggle bookmark:", err);
+    }
   };
 
   const handleCopy = (text: string) => {
@@ -352,8 +368,9 @@ export const ProblemDetail: React.FC = () => {
           </Link>
           
           <button 
-            onClick={() => setBookmarked(!bookmarked)}
+            onClick={handleBookmarkToggle}
             className={`p-1.5 rounded-lg border transition-colors ${bookmarked ? "text-yellow-500 bg-yellow-500/10 border-yellow-500/20" : "text-muted-foreground hover:text-foreground border-border hover:bg-muted/50"}`}
+            title={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
           >
             <Bookmark size={15} />
           </button>

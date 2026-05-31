@@ -7,10 +7,11 @@ interface ListProblemsQuery {
   search?: string;
   difficulty?: number;
   tag?: string;
+  bookmarked?: boolean;
 }
 
 export class ProblemsService {
-  static async listProblems(query: ListProblemsQuery) {
+  static async listProblems(query: ListProblemsQuery, userId: string) {
     const page = Math.max(1, query.page || 1);
     const limit = Math.max(1, query.limit || 20);
     const skip = (page - 1) * limit;
@@ -39,6 +40,15 @@ export class ProblemsService {
       };
     }
 
+    // Bookmark filter
+    if (query.bookmarked) {
+      whereClause.bookmarks = {
+        some: {
+          userId
+        }
+      };
+    }
+
     // Query list (selecting light fields for fast load times)
     const [problems, totalCount] = await prisma.$transaction([
       prisma.problem.findMany({
@@ -55,6 +65,10 @@ export class ProblemsService {
             select: {
               name: true
             }
+          },
+          bookmarks: {
+            where: { userId },
+            select: { id: true }
           }
         },
         orderBy: { id: "asc" },
@@ -67,7 +81,11 @@ export class ProblemsService {
     const totalPages = Math.ceil(totalCount / limit);
 
     return {
-      problems,
+      problems: problems.map(p => ({
+        ...p,
+        isBookmarked: p.bookmarks.length > 0,
+        bookmarks: undefined
+      })),
       pagination: {
         page,
         limit,
@@ -77,7 +95,7 @@ export class ProblemsService {
     };
   }
 
-  static async getProblemDetail(id: number) {
+  static async getProblemDetail(id: number, userId: string) {
     const problem = await prisma.problem.findUnique({
       where: { id },
       include: {
@@ -89,6 +107,10 @@ export class ProblemsService {
         },
         templates: {
           select: { code: true, language: true }
+        },
+        bookmarks: {
+          where: { userId },
+          select: { id: true }
         }
       }
     });
@@ -97,7 +119,50 @@ export class ProblemsService {
       throw new Error(`Problem with ID ${id} not found.`);
     }
 
-    return problem;
+    return {
+      ...problem,
+      isBookmarked: problem.bookmarks.length > 0,
+      bookmarks: undefined
+    };
+  }
+
+  static async bookmarkProblem(problemId: number, userId: string) {
+    const problem = await prisma.problem.findUnique({ where: { id: problemId } });
+    if (!problem) {
+      throw new Error(`Problem with ID ${problemId} not found.`);
+    }
+
+    return prisma.bookmark.upsert({
+      where: {
+        userId_problemId: {
+          userId,
+          problemId
+        }
+      },
+      update: {},
+      create: {
+        userId,
+        problemId
+      }
+    });
+  }
+
+  static async unbookmarkProblem(problemId: number, userId: string) {
+    try {
+      return await prisma.bookmark.delete({
+        where: {
+          userId_problemId: {
+            userId,
+            problemId
+          }
+        }
+      });
+    } catch (err: any) {
+      if (err.code === "P2025") {
+        throw new Error("Bookmark not found.");
+      }
+      throw err;
+    }
   }
 
   static async listAllTags() {

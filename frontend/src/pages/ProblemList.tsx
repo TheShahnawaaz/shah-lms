@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../lib/api";
-import { Search, Tag as TagIcon, ArrowLeft, ArrowRight, Eye, Filter, ChevronDown, X } from "lucide-react";
+import { Search, Tag as TagIcon, ArrowLeft, ArrowRight, Eye, Filter, ChevronDown, X, Bookmark } from "lucide-react";
 
 interface ProblemSummary {
   id: number;
@@ -11,6 +11,7 @@ interface ProblemSummary {
   timeLimitSec: number;
   memoryLimitMb: number;
   tags: { name: string }[];
+  isBookmarked: boolean;
 }
 
 interface TagSummary {
@@ -29,6 +30,9 @@ export const ProblemList: React.FC = () => {
     totalCount: 0,
     totalPages: 1
   });
+
+  const location = useLocation();
+  const isBookmarksPage = location.pathname === "/bookmarks";
 
   const page = parseInt(searchParams.get("page") || "1");
   const search = searchParams.get("search") || "";
@@ -80,6 +84,7 @@ export const ProblemList: React.FC = () => {
         if (search) endpoint += `&search=${encodeURIComponent(search)}`;
         if (difficulty) endpoint += `&difficulty=${difficulty}`;
         if (selectedTag) endpoint += `&tag=${encodeURIComponent(selectedTag)}`;
+        if (isBookmarksPage) endpoint += `&bookmarked=true`;
 
         const res = await api.get<{ problems: ProblemSummary[]; pagination: any }>(endpoint);
         setProblems(res.data.problems);
@@ -91,7 +96,31 @@ export const ProblemList: React.FC = () => {
       }
     };
     fetchProblems();
-  }, [page, search, difficulty, selectedTag]);
+  }, [page, search, difficulty, selectedTag, isBookmarksPage]);
+
+  const handleBookmarkToggle = async (problemId: number, currentStatus: boolean, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      if (currentStatus) {
+        await api.delete(`/problems/${problemId}/bookmark`);
+        if (isBookmarksPage) {
+          setProblems((prev) => prev.filter((p) => p.id !== problemId));
+        } else {
+          setProblems((prev) =>
+            prev.map((p) => (p.id === problemId ? { ...p, isBookmarked: false } : p))
+          );
+        }
+      } else {
+        await api.post(`/problems/${problemId}/bookmark`);
+        setProblems((prev) =>
+          prev.map((p) => (p.id === problemId ? { ...p, isBookmarked: true } : p))
+        );
+      }
+    } catch (err: any) {
+      console.error("Failed to toggle bookmark:", err);
+    }
+  };
 
   const updateFilters = (newFilters: { [key: string]: string | number }) => {
     const updatedParams = new URLSearchParams(searchParams);
@@ -137,8 +166,14 @@ export const ProblemList: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Problems</h1>
-        <p className="text-sm text-muted-foreground">Solve tasks, explore editorials, and improve your skills.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          {isBookmarksPage ? "Bookmarked Problems" : "Problems"}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {isBookmarksPage
+            ? "Your saved tasks. Review, manage, and practice them here."
+            : "Solve tasks, explore editorials, and improve your skills."}
+        </p>
       </div>
 
       {/* Filters */}
@@ -374,65 +409,107 @@ export const ProblemList: React.FC = () => {
           </div>
         ) : problems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground bg-card rounded-xl border border-border md:border-0">
-            <span className="text-sm mb-4">No problems match your filters.</span>
-            <button
-              onClick={() => setSearchParams({})}
-              className="px-4 py-2 bg-muted text-foreground hover:bg-muted/80 rounded-md text-sm font-medium transition-colors"
-            >
-              Clear Filters
-            </button>
+            {isBookmarksPage ? (
+              <>
+                <div className="p-3 bg-muted rounded-full text-muted-foreground mb-4">
+                  <Bookmark size={24} className="stroke-[1.5]" />
+                </div>
+                <span className="text-sm mb-2 font-semibold text-foreground">No bookmarks found</span>
+                <span className="text-xs mb-6 max-w-sm text-center">
+                  You haven't bookmarked any problems yet. Click the bookmark icon in any problem to save it.
+                </span>
+                <Link
+                  to="/problems"
+                  className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md text-sm font-medium transition-colors shadow-sm"
+                >
+                  Browse Problems
+                </Link>
+              </>
+            ) : (
+              <>
+                <span className="text-sm mb-4">No problems match your filters.</span>
+                <button
+                  onClick={() => setSearchParams({})}
+                  className="px-4 py-2 bg-muted text-foreground hover:bg-muted/80 rounded-md text-sm font-medium transition-colors"
+                >
+                  Clear Filters
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <>
             {/* Mobile Card List View (Visible on mobile, hidden on desktop) */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
-              {problems.map((problem) => (
-                <div key={problem.id} className="p-4 rounded-xl border border-border bg-card shadow-sm flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-muted-foreground font-semibold px-1.5 py-0.5 rounded bg-muted/60">
-                          #{problem.id}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getDifficultyColor(problem.difficulty)}`}>
-                          {getDifficultyLabel(problem.difficulty)}
-                        </span>
+              <AnimatePresence initial={false}>
+                {problems.map((problem) => (
+                  <motion.div
+                    key={problem.id}
+                    layout
+                    initial={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="p-4 rounded-xl border border-border bg-card shadow-sm flex flex-col gap-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-muted-foreground font-semibold px-1.5 py-0.5 rounded bg-muted/60">
+                            #{problem.id}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getDifficultyColor(problem.difficulty)}`}>
+                            {getDifficultyLabel(problem.difficulty)}
+                          </span>
+                        </div>
+                        <Link to={`/problems/${problem.id}`} className="font-bold text-sm text-foreground hover:text-primary transition-colors block truncate">
+                          {problem.title}
+                        </Link>
                       </div>
-                      <Link to={`/problems/${problem.id}`} className="font-bold text-sm text-foreground hover:text-primary transition-colors block truncate">
-                        {problem.title}
-                      </Link>
-                    </div>
-                    
-                    <Link
-                      to={`/problems/${problem.id}`}
-                      className="flex items-center justify-center size-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-colors shrink-0 shadow-sm"
-                      title="Solve Problem"
-                    >
-                      <Eye size={15} />
-                    </Link>
-                  </div>
-
-                  {/* Topic Tags */}
-                  {problem.tags && problem.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 border-t border-border/40 pt-2.5">
-                      {problem.tags.slice(0, 3).map((t, idx) => (
-                        <span
-                          key={idx}
-                          onClick={() => updateFilters({ tag: t.name })}
-                          className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[10px] cursor-pointer hover:bg-foreground hover:text-background transition-colors"
+                      
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={(e) => handleBookmarkToggle(problem.id, problem.isBookmarked, e)}
+                          className={`flex items-center justify-center size-8 rounded-lg border transition-colors ${
+                            problem.isBookmarked
+                              ? "text-yellow-500 bg-yellow-500/10 border-yellow-500/20"
+                              : "text-muted-foreground hover:text-foreground border-border hover:bg-muted/50"
+                          }`}
+                          title={problem.isBookmarked ? "Remove bookmark" : "Bookmark problem"}
                         >
-                          {t.name}
-                        </span>
-                      ))}
-                      {problem.tags.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground pt-0.5 font-medium align-middle">
-                          +{problem.tags.length - 3}
-                        </span>
-                      )}
+                          <Bookmark size={14} fill={problem.isBookmarked ? "currentColor" : "none"} />
+                        </button>
+                        <Link
+                          to={`/problems/${problem.id}`}
+                          className="flex items-center justify-center size-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-colors shadow-sm"
+                          title="Solve Problem"
+                        >
+                          <Eye size={15} />
+                        </Link>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
+
+                    {/* Topic Tags */}
+                    {problem.tags && problem.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 border-t border-border/40 pt-2.5">
+                        {problem.tags.slice(0, 3).map((t, idx) => (
+                          <span
+                            key={idx}
+                            onClick={() => updateFilters({ tag: t.name })}
+                            className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[10px] cursor-pointer hover:bg-foreground hover:text-background transition-colors"
+                          >
+                            {t.name}
+                          </span>
+                        ))}
+                        {problem.tags.length > 3 && (
+                          <span className="text-[10px] text-muted-foreground pt-0.5 font-medium align-middle">
+                            +{problem.tags.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
 
             {/* Desktop Table View (Hidden on mobile, visible on desktop) */}
@@ -448,46 +525,68 @@ export const ProblemList: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {problems.map((problem) => (
-                    <tr key={problem.id} className="hover:bg-muted/30 transition-colors group">
-                      <td className="px-6 py-4 text-muted-foreground font-mono">{problem.id}</td>
-                      <td className="px-6 py-4">
-                        <Link to={`/problems/${problem.id}`} className="font-medium text-foreground group-hover:text-primary transition-colors">
-                          {problem.title}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded-md text-xs font-medium border ${getDifficultyColor(problem.difficulty)}`}>
-                          {getDifficultyLabel(problem.difficulty)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1.5 max-w-[250px] truncate">
-                          {problem.tags.slice(0, 3).map((t, idx) => (
-                            <span
-                              key={idx}
-                              onClick={() => updateFilters({ tag: t.name })}
-                              className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[10px] cursor-pointer hover:bg-foreground hover:text-background transition-colors"
+                  <AnimatePresence initial={false}>
+                    {problems.map((problem) => (
+                      <motion.tr
+                        key={problem.id}
+                        layout
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="hover:bg-muted/30 transition-colors group"
+                      >
+                        <td className="px-6 py-4 text-muted-foreground font-mono">{problem.id}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => handleBookmarkToggle(problem.id, problem.isBookmarked, e)}
+                              className={`p-1 rounded-md transition-colors ${
+                                problem.isBookmarked
+                                  ? "text-yellow-500 hover:text-yellow-600 bg-yellow-500/10"
+                                  : "text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-muted/50"
+                              }`}
+                              title={problem.isBookmarked ? "Remove bookmark" : "Bookmark problem"}
                             >
-                              {t.name}
-                            </span>
-                          ))}
-                          {problem.tags.length > 3 && (
-                            <span className="text-[10px] text-muted-foreground align-middle">+{problem.tags.length - 3}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Link
-                          to={`/problems/${problem.id}`}
-                          className="inline-flex items-center justify-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                          title="Solve Problem"
-                        >
-                          <Eye size={16} />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                              <Bookmark size={14} fill={problem.isBookmarked ? "currentColor" : "none"} />
+                            </button>
+                            <Link to={`/problems/${problem.id}`} className="font-medium text-foreground group-hover:text-primary transition-colors">
+                              {problem.title}
+                            </Link>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-0.5 rounded-md text-xs font-medium border ${getDifficultyColor(problem.difficulty)}`}>
+                            {getDifficultyLabel(problem.difficulty)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1.5 max-w-[250px] truncate">
+                            {problem.tags.slice(0, 3).map((t, idx) => (
+                              <span
+                                key={idx}
+                                onClick={() => updateFilters({ tag: t.name })}
+                                className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[10px] cursor-pointer hover:bg-foreground hover:text-background transition-colors"
+                              >
+                                {t.name}
+                              </span>
+                            ))}
+                            {problem.tags.length > 3 && (
+                              <span className="text-[10px] text-muted-foreground align-middle">+{problem.tags.length - 3}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Link
+                            to={`/problems/${problem.id}`}
+                            className="inline-flex items-center justify-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                            title="Solve Problem"
+                          >
+                            <Eye size={16} />
+                          </Link>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
                 </tbody>
               </table>
             </div>

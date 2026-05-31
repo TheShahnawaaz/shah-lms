@@ -46,6 +46,16 @@ export const App: React.FC = () => {
           }
         />
         <Route
+          path="/bookmarks"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ProblemList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/problems/:id"
           element={
             <ProtectedRoute>

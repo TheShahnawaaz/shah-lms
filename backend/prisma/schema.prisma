@@ -15,6 +15,7 @@ model User {
   isAdmin           Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  bookmarks         Bookmark[]
 }
 
 model Problem {
@@ -38,6 +39,7 @@ model Problem {
   tags            Tag[]          @relation("ProblemTags")
   editorials      Editorial[]
   templates       TemplateCode[]
+  bookmarks       Bookmark[]
 }
 
 model Tag {
@@ -60,4 +62,15 @@ model TemplateCode {
   problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
   code      String
   language  String
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  problemId Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, problemId])
 }
