@@ -2,6 +2,19 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.1.4] - 2026-06-01
+
+### Fixed
+- Desktop DMG/MSI now connects to the production backend (api.lms.theshahnawaz.in) instead of localhost:5001. The GitHub Actions release workflow was missing the `VITE_API_URL` environment variable, causing all released binaries to fall back to a local server.
+
+### Added (Web App)
+- New `/download` page with dynamic GitHub releases listing, OS auto-detection, and unquarantine guides for macOS and Windows.
+- Download App CTA button pinned to sidebar footer (matching Claude/Linear style).
+- Run/Submit interceptor modal on the web app redirecting users to download the desktop client.
+- Submissions history accordion tab in the web problem detail view (read-only Monaco editor + test case results).
+- Problem status badges (Solved ✅ / Attempted 🟡 / Todo ⚪) on the problems list page.
+- Live dashboard statistics: solved count, daily streak, and difficulty distribution bars.
+
 ## [0.1.3] - 2026-06-01
 
 ### Added
