@@ -35,6 +35,7 @@ export const ProblemList: React.FC = () => {
   const search = searchParams.get("search") || "";
   const difficulty = searchParams.get("difficulty") || "";
   const selectedTag = searchParams.get("tag") || "";
+  const status = searchParams.get("status") || "";
 
   const [searchInput, setSearchInput] = useState(search);
   const observerRef = useRef<HTMLDivElement>(null);
@@ -49,6 +50,7 @@ export const ProblemList: React.FC = () => {
     search,
     difficulty,
     selectedTag,
+    status,
     isBookmarksPage
   });
 
@@ -56,9 +58,10 @@ export const ProblemList: React.FC = () => {
     lastFilters.search !== search ||
     lastFilters.difficulty !== difficulty ||
     lastFilters.selectedTag !== selectedTag ||
+    lastFilters.status !== status ||
     lastFilters.isBookmarksPage !== isBookmarksPage
   ) {
-    setLastFilters({ search, difficulty, selectedTag, isBookmarksPage });
+    setLastFilters({ search, difficulty, selectedTag, status, isBookmarksPage });
     setCurrentPage(1);
     setHasMore(true);
     setProblems([]);
@@ -85,6 +88,7 @@ export const ProblemList: React.FC = () => {
         if (search) endpoint += `&search=${encodeURIComponent(search)}`;
         if (difficulty) endpoint += `&difficulty=${difficulty}`;
         if (selectedTag) endpoint += `&tag=${encodeURIComponent(selectedTag)}`;
+        if (status) endpoint += `&status=${encodeURIComponent(status)}`;
         if (isBookmarksPage) endpoint += `&bookmarked=true`;
 
         const res = await api.get<{ problems: ProblemSummary[]; pagination: any }>(endpoint);
@@ -113,7 +117,7 @@ export const ProblemList: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [currentPage, search, difficulty, selectedTag, isBookmarksPage]);
+  }, [currentPage, search, difficulty, selectedTag, status, isBookmarksPage]);
 
   // Monitor intersection to load more problems
   useEffect(() => {
@@ -210,6 +214,7 @@ export const ProblemList: React.FC = () => {
         onSearchSubmit={handleSearchSubmit}
         selectedTag={selectedTag}
         difficulty={difficulty}
+        status={status}
         tags={tags}
         updateFilters={updateFilters}
       />

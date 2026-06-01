@@ -2,6 +2,16 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.1.5] - 2026-06-01
+
+### Added
+- Added Problem Status Filters (All Statuses, Solved, Attempted, Todo) on the Problem List page.
+- Created mobile responsive 2-column grid layout for filters on narrow screen viewports.
+
+### Fixed
+- Fixed dropdown layout overlap bug where the clear button and down-arrow icons collided.
+- Fixed React nested button hydration warnings by utilizing div wrappers for dropdown triggers.
+
 ## [0.1.4] - 2026-06-01
 
 ### Fixed

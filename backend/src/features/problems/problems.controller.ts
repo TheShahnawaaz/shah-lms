@@ -14,6 +14,7 @@ export class ProblemsController {
         : undefined;
       const tag = req.query.tag as string | undefined;
       const bookmarked = req.query.bookmarked === "true";
+      const status = req.query.status as string | undefined;
 
       const userId = req.user?.id;
       if (!userId) {
@@ -31,7 +32,8 @@ export class ProblemsController {
           search,
           difficulty,
           tag,
-          bookmarked
+          bookmarked,
+          status
         },
         userId
       );

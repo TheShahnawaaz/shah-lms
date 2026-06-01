@@ -8,6 +8,7 @@ interface ListProblemsQuery {
   difficulty?: number;
   tag?: string;
   bookmarked?: boolean;
+  status?: string;
 }
 
 export class ProblemsService {
@@ -47,6 +48,34 @@ export class ProblemsService {
           userId
         }
       };
+    }
+
+    // Status filter
+    if (query.status) {
+      if (query.status === "Solved") {
+        whereClause.submissions = {
+          some: {
+            userId,
+            status: "Accepted"
+          }
+        };
+      } else if (query.status === "Attempted") {
+        whereClause.submissions = {
+          some: {
+            userId
+          },
+          none: {
+            userId,
+            status: "Accepted"
+          }
+        };
+      } else if (query.status === "Todo") {
+        whereClause.submissions = {
+          none: {
+            userId
+          }
+        };
+      }
     }
 
     // Query list (selecting light fields for fast load times)

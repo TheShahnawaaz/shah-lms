@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Tag as TagIcon, ChevronDown, X, Filter } from "lucide-react";
+import { Search, Tag as TagIcon, ChevronDown, X, Filter, CheckSquare } from "lucide-react";
 
 interface TagSummary {
   id: string;
@@ -13,6 +13,7 @@ interface FilterBarProps {
   onSearchSubmit: (e: React.FormEvent) => void;
   selectedTag: string;
   difficulty: string;
+  status: string;
   tags: TagSummary[];
   updateFilters: (newFilters: { [key: string]: string | number }) => void;
 }
@@ -23,14 +24,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onSearchSubmit,
   selectedTag,
   difficulty,
+  status,
   tags,
   updateFilters
 }) => {
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
   const [diffDropdownOpen, setDiffDropdownOpen] = useState(false);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [tagSearchQuery, setTagSearchQuery] = useState("");
   const tagDropdownRef = useRef<HTMLDivElement>(null);
   const diffDropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -39,6 +43,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       }
       if (diffDropdownRef.current && !diffDropdownRef.current.contains(event.target as Node)) {
         setDiffDropdownOpen(false);
+      }
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setStatusDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -50,7 +57,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   );
 
   return (
-    <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex flex-col md:flex-row gap-4 items-center">
+    <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex flex-col lg:flex-row gap-4 items-center">
       <form onSubmit={onSearchSubmit} className="relative flex-1 w-full">
         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
           <Search size={16} />
@@ -64,38 +71,38 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         />
       </form>
 
-      <div className="flex items-center gap-4 w-full md:w-auto">
+      <div className="grid grid-cols-2 lg:flex lg:items-center gap-3 w-full lg:w-auto">
         {/* Topic Tag Dropdown */}
-        <div className="relative flex-1 md:flex-none md:w-48" ref={tagDropdownRef}>
-          <button
-            type="button"
+        <div className="relative col-span-1 lg:flex-none lg:w-48" ref={tagDropdownRef}>
+          <div
             onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
-            className="w-full bg-background border border-input rounded-lg py-2 pl-9 pr-8 text-sm text-left flex items-center justify-between cursor-pointer focus:outline-none hover:bg-muted/30 transition-all font-semibold truncate relative"
+            className="w-full bg-background border border-input rounded-lg py-2 pl-9 pr-3 text-sm text-left flex items-center justify-between cursor-pointer focus:outline-none hover:bg-muted/30 transition-all font-semibold truncate relative"
           >
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground pointer-events-none">
               <TagIcon size={16} />
             </span>
             <span className="truncate pr-4">{selectedTag || "All Topics"}</span>
 
-            {selectedTag && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateFilters({ tag: "" });
-                }}
-                className="absolute inset-y-0 right-8 flex items-center pr-1 text-muted-foreground hover:text-foreground z-10"
-                title="Clear topic filter"
-              >
-                <X size={12} />
-              </button>
-            )}
-
-            <ChevronDown
-              size={14}
-              className={`text-muted-foreground transition-transform duration-200 ${tagDropdownOpen ? "rotate-180" : ""}`}
-            />
-          </button>
+            <div className="flex items-center gap-1 shrink-0">
+              {selectedTag && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateFilters({ tag: "" });
+                  }}
+                  className="text-muted-foreground hover:text-foreground z-10 p-0.5 rounded hover:bg-muted transition-colors flex items-center justify-center cursor-pointer"
+                  title="Clear topic filter"
+                >
+                  <X size={12} />
+                </button>
+              )}
+              <ChevronDown
+                size={14}
+                className={`text-muted-foreground transition-transform duration-200 shrink-0 ${tagDropdownOpen ? "rotate-180" : ""}`}
+              />
+            </div>
+          </div>
 
           <AnimatePresence>
             {tagDropdownOpen && (
@@ -164,11 +171,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
 
         {/* Difficulty Dropdown */}
-        <div className="relative flex-1 md:flex-none md:w-40" ref={diffDropdownRef}>
-          <button
-            type="button"
+        <div className="relative col-span-1 lg:flex-none lg:w-40" ref={diffDropdownRef}>
+          <div
             onClick={() => setDiffDropdownOpen(!diffDropdownOpen)}
-            className={`w-full bg-background border border-input rounded-lg py-2 pl-9 pr-8 text-sm text-left flex items-center justify-between cursor-pointer focus:outline-none hover:bg-muted/30 transition-all font-semibold truncate relative ${
+            className={`w-full bg-background border border-input rounded-lg py-2 pl-9 pr-3 text-sm text-left flex items-center justify-between cursor-pointer focus:outline-none hover:bg-muted/30 transition-all font-semibold truncate relative ${
               difficulty === "1"
                 ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10"
                 : difficulty === "2"
@@ -199,25 +205,26 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         : "All Difficulties"}
             </span>
 
-            {difficulty && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateFilters({ difficulty: "" });
-                }}
-                className="absolute inset-y-0 right-8 flex items-center pr-1 text-muted-foreground hover:text-foreground z-10"
-                title="Clear difficulty filter"
-              >
-                <X size={12} />
-              </button>
-            )}
-
-            <ChevronDown
-              size={14}
-              className={`text-muted-foreground transition-transform duration-200 ${diffDropdownOpen ? "rotate-180" : ""}`}
-            />
-          </button>
+            <div className="flex items-center gap-1 shrink-0">
+              {difficulty && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateFilters({ difficulty: "" });
+                  }}
+                  className="text-muted-foreground hover:text-foreground z-10 p-0.5 rounded hover:bg-muted transition-colors flex items-center justify-center cursor-pointer"
+                  title="Clear difficulty filter"
+                >
+                  <X size={12} />
+                </button>
+              )}
+              <ChevronDown
+                size={14}
+                className={`text-muted-foreground transition-transform duration-200 shrink-0 ${diffDropdownOpen ? "rotate-180" : ""}`}
+              />
+            </div>
+          </div>
 
           <AnimatePresence>
             {diffDropdownOpen && (
@@ -310,6 +317,124 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     }`}
                   >
                     Extreme
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Status Dropdown */}
+        <div className="relative col-span-2 lg:flex-none lg:w-40" ref={statusDropdownRef}>
+          <div
+            onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+            className={`w-full bg-background border border-input rounded-lg py-2 pl-9 pr-3 text-sm text-left flex items-center justify-between cursor-pointer focus:outline-none hover:bg-muted/30 transition-all font-semibold truncate relative ${
+              status === "Solved"
+                ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10"
+                : status === "Attempted"
+                  ? "border-amber-500/30 text-amber-500 bg-amber-500/5 hover:bg-amber-500/10"
+                  : status === "Todo"
+                    ? "border-gray-500/30 text-muted-foreground bg-muted/20 hover:bg-muted/30"
+                    : ""
+            }`}
+          >
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground pointer-events-none">
+              <CheckSquare size={16} />
+            </span>
+            <span className="truncate pr-4">
+              {status === "Solved"
+                ? "Solved"
+                : status === "Attempted"
+                  ? "Attempted"
+                  : status === "Todo"
+                    ? "Todo"
+                    : "All Statuses"}
+            </span>
+
+            <div className="flex items-center gap-1 shrink-0">
+              {status && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateFilters({ status: "" });
+                  }}
+                  className="text-muted-foreground hover:text-foreground z-10 p-0.5 rounded hover:bg-muted transition-colors flex items-center justify-center cursor-pointer"
+                  title="Clear status filter"
+                >
+                  <X size={12} />
+                </button>
+              )}
+              <ChevronDown
+                size={14}
+                className={`text-muted-foreground transition-transform duration-200 shrink-0 ${statusDropdownOpen ? "rotate-180" : ""}`}
+              />
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {statusDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 5 }}
+                transition={{ duration: 0.12 }}
+                className="absolute left-0 mt-1.5 w-full min-w-[160px] rounded-xl border border-border bg-card p-1 shadow-lg z-50 overflow-hidden"
+              >
+                <div className="space-y-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFilters({ status: "" });
+                      setStatusDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-muted transition-colors ${
+                      !status ? "text-foreground bg-muted font-bold" : "text-muted-foreground"
+                    }`}
+                  >
+                    All Statuses
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFilters({ status: "Solved" });
+                      setStatusDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-500/10 transition-colors ${
+                      status === "Solved"
+                        ? "text-emerald-500 bg-emerald-500/5 font-bold"
+                        : "text-emerald-600 dark:text-emerald-400 hover:text-emerald-500"
+                    }`}
+                  >
+                    Solved
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFilters({ status: "Attempted" });
+                      setStatusDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-amber-500/10 transition-colors ${
+                      status === "Attempted"
+                        ? "text-amber-500 bg-amber-500/5 font-bold"
+                        : "text-amber-600 dark:text-amber-400 hover:text-amber-500"
+                    }`}
+                  >
+                    Attempted
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFilters({ status: "Todo" });
+                      setStatusDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-muted transition-colors ${
+                      status === "Todo"
+                        ? "text-foreground bg-muted font-bold"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    Todo
                   </button>
                 </div>
               </motion.div>
