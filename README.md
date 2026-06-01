@@ -8,10 +8,11 @@ Welcome to **ShahLMS**, a premium, open-source, and feature-rich learning manage
 
 ShahLMS provides a seamless, LeetCode-like user experience. It allows users to browse problems, write code inside an interactive Monaco Editor, run simulated tests, view editor boilerplate templates, check detailed editorials, and track their stats (streaks, stars, trophies).
 
-The application operates as a decoupled client-server project:
+The application operates as a decoupled client-server project, including a native desktop wrapper:
 1. **Frontend**: React 19 single-page app bundled with Vite, styled with TailwindCSS, using Framer Motion for premium micro-animations.
 2. **Backend**: Express API server written in TypeScript, using Prisma ORM to communicate with a PostgreSQL database.
-3. **Scraper Pipeline**: An integrated Python-based scraping tool (located in the workspace root at `scraper/` and managed by `main.py`) which crawls course syllabus/practice questions and feeds clean, standardized JSON problems directly to the seeding pipeline. Note that the platform is generic and can ingest any problem data matching the schema.
+3. **Desktop App (Tauri)**: A native desktop wrapper for macOS and Windows built with Tauri v2 and Rust, featuring secure loopback Google OAuth, a background auto-updater, and a local parallel code runner.
+4. **Scraper Pipeline**: An integrated Python-based scraping tool (located in the workspace root at `scraper/` and managed by `main.py`) which crawls course syllabus/practice questions and feeds clean, standardized JSON problems directly to the seeding pipeline. Note that the platform is generic and can ingest any problem data matching the schema.
 
 ---
 
@@ -50,6 +51,11 @@ flowchart TD
 * **JWT (JSON Web Tokens)** for secure, session-based authentication.
 * **Google Auth Library** facilitating Google OAuth2 sign-in.
 
+### Desktop App (`/platform/desktop`)
+* **Tauri v2** & **Rust** (handling secure file system isolation, compiler processes, and command binding).
+* **Local Compiler Engine**: Detects system compilers, executes code binaries, and manages process execution timeout supervisors.
+* **In-app Update Agent**: Validates public key cryptography (`tauri-plugin-updater`) and automates patching and relaunching.
+
 ---
 
 ## 📂 Project Structure
@@ -70,6 +76,9 @@ platform/
 │   │   ├── lib/           # Centralized Fetch API client
 │   │   └── pages/         # Dashboard, login, problems, admin seeding panels
 │   └── vercel.json        # Production client settings
+├── desktop/               # Tauri macOS & Windows Desktop Wrapper
+│   ├── src-tauri/         # Rust backend (compiler runner & configurations)
+│   └── src/               # React frontend (Monaco workspace and runner settings)
 ├── docs/                  # Detailed engineering manuals
 │   ├── mock_tracker.md    # Frontend-mocked features roadmap
 │   ├── architecture.md    # Component structure & security design
