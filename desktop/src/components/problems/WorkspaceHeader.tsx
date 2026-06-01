@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Bookmark, Sun, Moon, LogOut } from "lucide-react";
+import { ArrowLeft, Bookmark, Sun, Moon, LogOut, Settings } from "lucide-react";
+import { CompilerSettingsModal } from "./CompilerSettingsModal";
 
 interface WorkspaceHeaderProps {
   problemId: number;
@@ -29,6 +30,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   onLogout
 }) => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,6 +44,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   }, []);
 
   return (
+    <>
     <header className="h-[56px] border-b border-border flex items-center justify-between px-4 shrink-0 bg-card/60 backdrop-blur-md relative z-40">
       <div className="flex items-center gap-3 min-w-0">
         {/* Back button */}
@@ -87,6 +90,15 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
           title="Toggle Theme"
         >
           {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+        </button>
+
+        {/* Compiler Settings Gear Button */}
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border cursor-pointer"
+          title="Compiler Configurations"
+        >
+          <Settings size={15} />
         </button>
 
         {/* User Dropdown */}
@@ -149,6 +161,8 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         </div>
       </div>
     </header>
+    <CompilerSettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+    </>
   );
 };
 export default WorkspaceHeader;

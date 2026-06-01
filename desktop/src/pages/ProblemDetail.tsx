@@ -6,6 +6,7 @@ import WorkspaceHeader from "../components/problems/WorkspaceHeader";
 import ProblemDescriptionPanel from "../components/problems/ProblemDescriptionPanel";
 import CodeEditorPanel from "../components/problems/CodeEditorPanel";
 import ConsoleRunner from "../components/problems/ConsoleRunner";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Sample {
   input: string;
@@ -94,12 +95,19 @@ export const ProblemDetail: React.FC = () => {
   const [runnerTab, setRunnerTab] = useState<"sample" | "manual">("sample");
   const [activeSampleIdx, setActiveSampleIdx] = useState<number>(0);
   const [manualInput, setManualInput] = useState<string>("");
-  const [manualOutput, setManualOutput] = useState<string>("");
   const [isRunning, setIsRunning] = useState(false);
-  const [runSuccess, setRunSuccess] = useState(false);
-  const [runExecuted, setRunExecuted] = useState(false);
   const [runStep, setRunStep] = useState<string>("");
   const [bookmarked, setBookmarked] = useState(false);
+
+  // Per-sample results — indexed by sample position, persists until next run
+  interface SampleResult {
+    output: string;  // what the code printed
+    passed: boolean; // matches expected
+    status: string;  // Success | CompilationError | TimeLimitExceeded | RuntimeError
+  }
+  const [sampleResults, setSampleResults] = useState<(SampleResult | null)[]>([]);
+  // Manual tab result
+  const [manualResult, setManualResult] = useState<{ output: string; executed: boolean }>({ output: "", executed: false });
 
   // Resize states
   const [leftWidth, setLeftWidth] = useState<number>(50); // percentage
@@ -320,34 +328,93 @@ export const ProblemDetail: React.FC = () => {
     }
   };
 
-  const handleRunCode = () => {
+  const handleRunCode = async () => {
     if (!problem) return;
     setIsConsoleCollapsed(false);
     setIsRunning(true);
-    setRunExecuted(true);
-    setRunStep("Compiling...");
+    setRunStep("Compiling locally...");
 
-    // Animate compilation phases
-    setTimeout(() => {
-      setRunStep("Running Test Case 1...");
-    }, 700);
+    // Map frontend languages to compiler expectations
+    let lang = editorLang;
+    if (lang === "C++14") lang = "C++";
+    if (lang === "Python3") lang = "Python";
 
-    setTimeout(() => {
-      setIsRunning(false);
-      setRunSuccess(true);
-      if (runnerTab === "manual") {
-        setManualOutput(
-          manualInput ? "Execution complete. Exit code: 0\n" + manualInput : "No manual output"
-        );
+    if (runnerTab === "manual") {
+      // Manual tab: run against custom input only
+      try {
+        const res = await invoke<any>("run_code_locally", {
+          code: editorCode,
+          language: lang,
+          input: manualInput,
+          timeLimitSec: problem.timeLimitSec || 3.0,
+        });
+        let output = "";
+        if (res.status === "CompilationError") {
+          output = `Compilation Error:\n${res.compile_output}`;
+        } else if (res.status === "TimeLimitExceeded") {
+          output = `Time Limit Exceeded (limit: ${problem.timeLimitSec || 3.0}s)`;
+        } else if (res.status === "RuntimeError") {
+          output = `Runtime Error (Exit Code: ${res.exit_code ?? "?"})\n${res.stderr || "Process crashed."}`;
+        } else {
+          output = res.stdout || "(No output)";
+        }
+        setManualResult({ output, executed: true });
+      } catch (err: any) {
+        setManualResult({ output: `Execution error: ${err.message || err}`, executed: true });
       }
-    }, 1500);
+      setIsRunning(false);
+      setRunStep("");
+      return;
+    }
+
+    // Sample tab: run ALL samples in parallel
+    const samples = problem.samples;
+    const results: (SampleResult | null)[] = new Array(samples.length).fill(null);
+    setSampleResults(new Array(samples.length).fill(null));
+    setRunStep("Running all samples...");
+
+    // Fire all invocations simultaneously; update state as each resolves
+    const promises = samples.map(async (sample, i) => {
+      try {
+        const res = await invoke<any>("run_code_locally", {
+          code: editorCode,
+          language: lang,
+          input: sample.input,
+          timeLimitSec: problem.timeLimitSec || 3.0,
+        });
+
+        let output = "";
+        let passed = false;
+
+        if (res.status === "CompilationError") {
+          output = `Compilation Error:\n${res.compile_output}`;
+        } else if (res.status === "TimeLimitExceeded") {
+          output = `Time Limit Exceeded (limit: ${problem.timeLimitSec || 3.0}s)`;
+        } else if (res.status === "RuntimeError") {
+          output = `Runtime Error (Exit Code: ${res.exit_code ?? "?"})\n${res.stderr || "Process crashed."}`;
+        } else {
+          output = res.stdout || "(No output)";
+          passed = res.stdout.trim() === sample.output.trim();
+        }
+
+        results[i] = { output, passed, status: res.status };
+        setSampleResults([...results]);
+      } catch (err: any) {
+        results[i] = { output: `Execution error: ${(err as any).message || err}`, passed: false, status: "RuntimeError" };
+        setSampleResults([...results]);
+      }
+    });
+
+    await Promise.allSettled(promises);
+
+    setIsRunning(false);
+    setRunStep("");
   };
 
   const handleSubmitCode = () => {
     if (!problem) return;
     setIsConsoleCollapsed(false);
     setIsRunning(true);
-    setRunExecuted(true);
     setRunStep("Compiling on server...");
 
     setTimeout(() => {
@@ -356,7 +423,7 @@ export const ProblemDetail: React.FC = () => {
 
     setTimeout(() => {
       setIsRunning(false);
-      setRunSuccess(true);
+      setRunStep("");
       alert("Submission Status: Accepted (15/15 test cases passed)!");
     }, 1800);
   };
@@ -502,14 +569,12 @@ export const ProblemDetail: React.FC = () => {
             setRunnerTab={setRunnerTab}
             activeSampleIdx={activeSampleIdx}
             setActiveSampleIdx={setActiveSampleIdx}
-            runExecuted={runExecuted}
-            setRunExecuted={setRunExecuted}
-            runSuccess={runSuccess}
+            sampleResults={sampleResults}
+            manualResult={manualResult}
             isRunning={isRunning}
             runStep={runStep}
             manualInput={manualInput}
             setManualInput={setManualInput}
-            manualOutput={manualOutput}
             onRunCode={handleRunCode}
             onSubmitCode={handleSubmitCode}
             consoleHeight={consoleHeight}

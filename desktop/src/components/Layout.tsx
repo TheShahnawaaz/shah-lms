@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { Sidebar } from "./Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Sun, Moon, LogOut, Menu } from "lucide-react";
+import { ChevronRight, Sun, Moon, LogOut, Menu, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import { UpdateChecker } from "./UpdateChecker";
+import { CompilerSettingsModal } from "./problems/CompilerSettingsModal";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,6 +33,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -163,6 +165,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
                 {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
+              {/* Compiler Settings Button */}
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors border border-border cursor-pointer"
+                title="Compiler Configurations"
+              >
+                <Settings size={18} />
+              </button>
+
               {/* User Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -260,6 +271,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
           )}
         </main>
       </div>
+      <CompilerSettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 };

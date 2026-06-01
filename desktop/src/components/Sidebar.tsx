@@ -11,8 +11,10 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Bookmark
+  Bookmark,
+  Cpu
 } from "lucide-react";
+import { CompilerSettingsModal } from "./problems/CompilerSettingsModal";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -47,6 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [footerOpen, setFooterOpen] = useState(false);
   const [isHeaderHovered, setIsHeaderHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isCompilerSettingsOpen, setIsCompilerSettingsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const footerRef = useRef<HTMLDivElement>(null);
@@ -116,6 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
+    <>
     <motion.aside
       initial={false}
       animate={{ width: isMobile ? 240 : isCollapsed ? 68 : 240 }}
@@ -239,6 +243,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ))}
       </nav>
 
+      {/* Compiler Settings Button */}
+      <div className={`px-3 pb-2 ${isCollapsed && !isMobile ? "flex justify-center" : ""}`}>
+        <button
+          onClick={() => setIsCompilerSettingsOpen(true)}
+          className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 ${
+            isCollapsed && !isMobile ? "justify-center" : ""
+          }`}
+          title={isCollapsed && !isMobile ? "Compiler Settings" : undefined}
+        >
+          <Cpu size={18} className="flex-shrink-0" />
+          {!isCollapsed && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="truncate"
+            >
+              Compiler Settings
+            </motion.span>
+          )}
+        </button>
+      </div>
+
       {/* Sidebar Footer / User Dropdown */}
       <div className="p-3 border-t border-border relative" ref={footerRef}>
         {/* Dropup list */}
@@ -314,6 +340,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
     </motion.aside>
+  <CompilerSettingsModal
+    isOpen={isCompilerSettingsOpen}
+    onClose={() => setIsCompilerSettingsOpen(false)}
+  />
+  </>
   );
 };
 export default Sidebar;

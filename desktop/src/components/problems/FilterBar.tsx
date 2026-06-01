@@ -67,8 +67,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       <div className="flex items-center gap-4 w-full md:w-auto">
         {/* Topic Tag Dropdown */}
         <div className="relative flex-1 md:flex-none md:w-48" ref={tagDropdownRef}>
-          <button
-            type="button"
+          <div
             onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
             className="w-full bg-background border border-input rounded-lg py-2 pl-9 pr-8 text-sm text-left flex items-center justify-between cursor-pointer focus:outline-none hover:bg-muted/30 transition-all font-semibold truncate relative"
           >
@@ -84,7 +83,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   e.stopPropagation();
                   updateFilters({ tag: "" });
                 }}
-                className="absolute inset-y-0 right-8 flex items-center pr-1 text-muted-foreground hover:text-foreground z-10"
+                className="absolute inset-y-0 right-8 flex items-center pr-1 text-muted-foreground hover:text-foreground z-10 cursor-pointer"
                 title="Clear topic filter"
               >
                 <X size={12} />
@@ -95,7 +94,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               size={14}
               className={`text-muted-foreground transition-transform duration-200 ${tagDropdownOpen ? "rotate-180" : ""}`}
             />
-          </button>
+          </div>
 
           <AnimatePresence>
             {tagDropdownOpen && (
@@ -165,8 +164,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
         {/* Difficulty Dropdown */}
         <div className="relative flex-1 md:flex-none md:w-40" ref={diffDropdownRef}>
-          <button
-            type="button"
+          <div
             onClick={() => setDiffDropdownOpen(!diffDropdownOpen)}
             className={`w-full bg-background border border-input rounded-lg py-2 pl-9 pr-8 text-sm text-left flex items-center justify-between cursor-pointer focus:outline-none hover:bg-muted/30 transition-all font-semibold truncate relative ${
               difficulty === "1"
@@ -206,7 +204,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   e.stopPropagation();
                   updateFilters({ difficulty: "" });
                 }}
-                className="absolute inset-y-0 right-8 flex items-center pr-1 text-muted-foreground hover:text-foreground z-10"
+                className="absolute inset-y-0 right-8 flex items-center pr-1 text-muted-foreground hover:text-foreground z-10 cursor-pointer"
                 title="Clear difficulty filter"
               >
                 <X size={12} />
@@ -217,7 +215,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               size={14}
               className={`text-muted-foreground transition-transform duration-200 ${diffDropdownOpen ? "rotate-180" : ""}`}
             />
-          </button>
+          </div>
 
           <AnimatePresence>
             {diffDropdownOpen && (

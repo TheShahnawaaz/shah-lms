@@ -2,6 +2,18 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.1.2] - 2026-06-01
+
+### Added
+- Native local compiler detector and execution engine for C++, Python, and Java.
+- Time Limit Exceeded (TLE) supervisor thread to terminate infinite loops.
+- Workspace and Sidebar integration for a premium Compiler Settings Modal.
+- Parallel test case execution for "Run on Sample".
+
+### Fixed
+- Fixed stacking context backdrop-blur-md bug on WorkspaceHeader settings.
+- Resolved nested button React HTML validation warnings.
+
 ## [0.1.1] - 2026-06-01
 
 ### Fixed

@@ -1,3 +1,5 @@
+mod compiler;
+
 use std::io::{Read, Write};
 use std::net::{TcpListener};
 use std::sync::mpsc;
@@ -227,7 +229,13 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
-        .invoke_handler(tauri::generate_handler![start_login_flow])
+        .invoke_handler(tauri::generate_handler![
+            start_login_flow,
+            compiler::detect_compilers,
+            compiler::get_compiler_settings,
+            compiler::save_compiler_settings,
+            compiler::run_code_locally
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
