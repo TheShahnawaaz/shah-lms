@@ -7,6 +7,7 @@ import ProblemDetail from "./pages/ProblemDetail";
 import SeedPage from "./pages/admin/SeedPage";
 import AllowedUsers from "./pages/admin/AllowedUsers";
 import { Layout } from "./components/Layout";
+import { UpdateChecker } from "./components/UpdateChecker";
 
 // Helper component for Route protection
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -20,6 +21,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 export const App: React.FC = () => {
   return (
     <HashRouter>
+      <UpdateChecker />
       <Routes>
         {/* Public Auth Routes */}
         <Route path="/login" element={<Login />} />
