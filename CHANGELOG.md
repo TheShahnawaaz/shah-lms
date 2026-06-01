@@ -2,6 +2,14 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.1.3] - 2026-06-01
+
+### Added
+- Local parallel code submission execution engine evaluating C++, Python, and Java.
+- Accordion-style Submission History inspector rendering read-only Monaco Editor and test case diagnostics inline.
+- Solved status checkmarks and attempted dots on the problems table and card lists.
+- Solved count metrics and daily submission streak analytics on the dashboard.
+
 ## [0.1.2] - 2026-06-01
 
 ### Added

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import MathRenderer from "../MathRenderer";
-import { BookOpen, HelpCircle, Code, Clock, Terminal, Copy, Check, History, ExternalLink } from "lucide-react";
+import { BookOpen, HelpCircle, Code, Clock, Terminal, Copy, Check, History, ChevronDown, ChevronUp } from "lucide-react";
 import DifficultyBadge from "./DifficultyBadge";
 
 interface Sample {
@@ -51,7 +51,6 @@ interface ProblemDescriptionPanelProps {
   monacoTheme: string;
   activeMobilePane: "desc" | "editor";
   submissionsList: any[];
-  onViewSubmissionDetail: (sub: any) => void;
   style?: React.CSSProperties;
 }
 
@@ -100,11 +99,12 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
   monacoTheme,
   activeMobilePane,
   submissionsList,
-  onViewSubmissionDetail,
   style
 }) => {
   const [expandedHint, setExpandedHint] = useState<"h1" | "h2" | "sa" | null>(null);
   const [copiedEditorial, setCopiedEditorial] = useState(false);
+  const [expandedSubmissionId, setExpandedSubmissionId] = useState<string | null>(null);
+  const [copiedSubmissionId, setCopiedSubmissionId] = useState<string | null>(null);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -360,57 +360,189 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
                   No submissions yet. Write your code and click Submit to evaluate.
                 </div>
               ) : (
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {submissionsList.map((sub) => {
                     const isPassed = sub.status === "Accepted";
                     const formattedDate = new Date(sub.createdAt).toLocaleString(undefined, {
                       dateStyle: "short",
                       timeStyle: "short",
                     });
+                    const isExpanded = expandedSubmissionId === sub.id;
+                    const isCopied = copiedSubmissionId === sub.id;
+
+                    const results: any[] = Array.isArray(sub.sampleResults)
+                      ? sub.sampleResults
+                      : typeof sub.sampleResults === "string"
+                        ? JSON.parse(sub.sampleResults)
+                        : [];
 
                     return (
                       <div
                         key={sub.id}
-                        onClick={() => onViewSubmissionDetail(sub)}
-                        className="p-3.5 border border-border bg-card hover:bg-muted/30 rounded-xl shadow-sm flex items-center justify-between gap-4 cursor-pointer transition-all hover:-translate-y-0.5 group text-foreground"
+                        className="border border-border bg-card rounded-xl shadow-sm overflow-hidden flex flex-col text-foreground"
                       >
-                        <div className="flex items-center gap-3">
-                          <span className={`w-2.5 h-2.5 rounded-full ${
-                            isPassed
-                              ? "bg-green-500 animate-pulse"
-                              : sub.status === "WrongAnswer"
-                                ? "bg-destructive"
-                                : "bg-yellow-500"
-                          }`} />
-                          <div>
-                            <span className="text-xs font-bold">
-                              {sub.status === "Accepted"
-                                ? "Accepted"
+                        {/* Header Row (Accordion trigger) */}
+                        <div
+                          onClick={() => setExpandedSubmissionId(isExpanded ? null : sub.id)}
+                          className="p-3.5 hover:bg-muted/20 flex items-center justify-between gap-4 cursor-pointer transition-colors select-none"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`w-2.5 h-2.5 rounded-full ${
+                              isPassed
+                                ? "bg-green-500 animate-pulse"
                                 : sub.status === "WrongAnswer"
-                                  ? "Wrong Answer"
-                                  : sub.status === "TimeLimitExceeded"
-                                    ? "TLE"
-                                    : sub.status === "CompilationError"
-                                      ? "Compile Error"
-                                      : "Runtime Error"}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground block mt-0.5">
-                              {formattedDate} • {sub.language}
+                                  ? "bg-destructive"
+                                  : "bg-yellow-500"
+                            }`} />
+                            <div>
+                              <span className="text-xs font-bold">
+                                {sub.status === "Accepted"
+                                  ? "Accepted"
+                                  : sub.status === "WrongAnswer"
+                                    ? "Wrong Answer"
+                                    : sub.status === "TimeLimitExceeded"
+                                      ? "TLE"
+                                      : sub.status === "CompilationError"
+                                        ? "Compile Error"
+                                        : "Runtime Error"}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                {formattedDate} • {sub.language}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            {sub.status !== "CompilationError" && (
+                              <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                                {sub.executionTimeMs} ms
+                              </span>
+                            )}
+                            <span className="text-muted-foreground">
+                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                          {sub.status !== "CompilationError" && (
-                            <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                              {sub.executionTimeMs} ms
-                            </span>
-                          )}
-                          <span className="text-muted-foreground hover:text-primary transition-colors text-xs flex items-center gap-1 font-bold opacity-0 group-hover:opacity-100">
-                            <span>Details</span>
-                            <ExternalLink size={11} />
-                          </span>
-                        </div>
+                        {/* Expanded details container */}
+                        {isExpanded && (
+                          <div className="p-4 border-t border-border bg-muted/5 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                            {/* Editor and code */}
+                            <div className="flex flex-col border border-border rounded-lg overflow-hidden bg-card min-h-0">
+                              <div className="h-9 border-b border-border bg-[#f8fafc] dark:bg-muted/15 flex items-center justify-between px-3 shrink-0 select-none">
+                                <div className="flex items-center h-full gap-2">
+                                  <div className="flex items-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-red-500/80"></span>
+                                    <span className="w-2 h-2 rounded-full bg-yellow-500/80"></span>
+                                    <span className="w-2 h-2 rounded-full bg-green-500/80"></span>
+                                  </div>
+                                  <span className="text-[10px] font-bold text-muted-foreground bg-muted-foreground/10 px-1.5 py-0.5 rounded ml-2">
+                                    {sub.language}
+                                  </span>
+                                </div>
+
+                                <button
+                                  onClick={() => {
+                                    handleCopy(sub.code);
+                                    setCopiedSubmissionId(sub.id);
+                                    setTimeout(() => setCopiedSubmissionId(null), 2000);
+                                  }}
+                                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded transition-colors"
+                                  title="Copy code"
+                                >
+                                  {isCopied ? (
+                                    <Check size={12} className="text-green-500" />
+                                  ) : (
+                                    <Copy size={12} />
+                                  )}
+                                </button>
+                              </div>
+
+                              <div className="h-64 relative bg-white dark:bg-[#1e1e1e]">
+                                <MonacoEditor
+                                  height="100%"
+                                  theme={monacoTheme}
+                                  language={getMonacoLanguage(sub.language)}
+                                  value={sub.code}
+                                  options={{
+                                    readOnly: true,
+                                    fontSize: 12,
+                                    fontFamily: "Fira Code, SF Mono, Monaco, monospace",
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    padding: { top: 10, bottom: 10 },
+                                    lineNumbersMinChars: 3,
+                                    automaticLayout: true,
+                                    domReadOnly: true,
+                                    contextmenu: false,
+                                    mouseWheelZoom: false,
+                                    scrollbar: { vertical: "visible", horizontal: "auto" }
+                                  }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Execution Results */}
+                            <div className="space-y-2.5">
+                              <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-left">
+                                Sample Test Cases
+                              </h5>
+                              <div className="grid grid-cols-1 gap-2.5">
+                                {results.length === 0 ? (
+                                  <div className="text-xs text-muted-foreground py-2 text-center border border-dashed border-border rounded-lg">
+                                    No run details available.
+                                  </div>
+                                ) : (
+                                  results.map((res, idx) => {
+                                    const sample = problem.samples[idx];
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className={`p-3 border rounded-lg bg-card text-left space-y-2 transition-all ${
+                                          res.passed
+                                            ? "border-green-500/10"
+                                            : "border-destructive/15"
+                                        }`}
+                                      >
+                                        <div className="flex justify-between items-center text-xs font-semibold">
+                                          <span>Case {idx + 1}</span>
+                                          <span className={res.passed ? "text-green-500 font-bold" : "text-destructive font-bold"}>
+                                            {res.passed ? "Passed" : res.status === "TimeLimitExceeded" ? "TLE" : "Failed"}
+                                          </span>
+                                        </div>
+
+                                        {!res.passed && sample && (
+                                          <div className="space-y-2 pt-2.5 border-t border-border/30 text-[11px]">
+                                            {sample.input && (
+                                              <div className="space-y-0.5">
+                                                <span className="font-bold text-muted-foreground uppercase text-[9px]">Input</span>
+                                                <pre className="p-2 bg-muted/40 border border-border rounded font-mono text-[10px] whitespace-pre-wrap">
+                                                  {sample.input.trim()}
+                                                </pre>
+                                              </div>
+                                            )}
+                                            <div className="space-y-0.5">
+                                              <span className="font-bold text-muted-foreground uppercase text-[9px]">Expected</span>
+                                              <pre className="p-2 bg-muted/40 border border-border rounded font-mono text-[10px] whitespace-pre-wrap">
+                                                {sample.output.trim()}
+                                              </pre>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                              <span className="font-bold text-muted-foreground uppercase text-[9px]">Actual Output</span>
+                                              <pre className="p-2 bg-destructive/5 border border-destructive/20 text-destructive rounded font-mono text-[10px] whitespace-pre-wrap">
+                                                {res.output ? res.output.trim() : "(No output)"}
+                                              </pre>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

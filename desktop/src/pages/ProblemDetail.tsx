@@ -8,7 +8,6 @@ import CodeEditorPanel from "../components/problems/CodeEditorPanel";
 import ConsoleRunner from "../components/problems/ConsoleRunner";
 import { invoke } from "@tauri-apps/api/core";
 import SubmissionResultModal from "../components/problems/SubmissionResultModal";
-import SubmissionDetailModal from "../components/problems/SubmissionDetailModal";
 
 interface Sample {
   input: string;
@@ -114,8 +113,6 @@ export const ProblemDetail: React.FC = () => {
   // Submissions list, selection and modal flags
   const [submissionsList, setSubmissionsList] = useState<any[]>([]);
   const [isResultModalOpen, setIsResultModalOpen] = useState(false);
-  const [activeSubmission, setActiveSubmission] = useState<any | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<{
     status: string;
     executionTimeMs: number;
@@ -642,10 +639,6 @@ export const ProblemDetail: React.FC = () => {
           monacoTheme={monacoTheme}
           activeMobilePane={activeMobilePane}
           submissionsList={submissionsList}
-          onViewSubmissionDetail={(sub) => {
-            setActiveSubmission(sub);
-            setIsDetailModalOpen(true);
-          }}
           style={
             isDesktop
               ? {
@@ -729,12 +722,6 @@ export const ProblemDetail: React.FC = () => {
         samples={problem.samples}
       />
 
-      <SubmissionDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        submission={activeSubmission}
-        samples={problem.samples}
-      />
     </div>
   );
 };
