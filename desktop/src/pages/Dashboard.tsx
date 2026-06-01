@@ -22,6 +22,14 @@ export const Dashboard: React.FC = () => {
     4: 0,
     5: 0
   });
+  const [solvedStats, setSolvedStats] = useState<{ [key: number]: number }>({
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0
+  });
+  const [streak, setStreak] = useState<number>(0);
   const navigate = useNavigate();
 
   const filteredTags = tags.filter((tag) =>
@@ -34,12 +42,14 @@ export const Dashboard: React.FC = () => {
         const [tagsResponse, problemsResponse, statsResponse] = await Promise.all([
           api.get<TagSummary[]>("/problems/tags"),
           api.get<{ pagination: { totalCount: number } }>("/problems?limit=1"),
-          api.get<{ difficultyDistribution: { [key: number]: number } }>("/problems/stats")
+          api.get<{ difficultyDistribution: { [key: number]: number }; solvedDistribution: { [key: number]: number }; streak: number }>("/problems/stats")
         ]);
 
         setTags(tagsResponse.data);
         setTotalProblems(problemsResponse.data.pagination.totalCount);
-        setDiffStats(statsResponse.data.difficultyDistribution);
+        setDiffStats(statsResponse.data.difficultyDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+        setSolvedStats(statsResponse.data.solvedDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+        setStreak(statsResponse.data.streak || 0);
       } catch (err) {
         console.error("Dashboard error:", err);
       } finally {
@@ -53,11 +63,13 @@ export const Dashboard: React.FC = () => {
     navigate(`/problems?tag=${encodeURIComponent(tagName)}`);
   };
 
+  const totalSolved = Object.values(solvedStats).reduce((a, b) => a + b, 0);
+
   const statCards = [
     { label: "Total Problems", value: loading ? "..." : totalProblems, icon: BookOpen },
-    { label: "Solved Problems", value: `0 / ${totalProblems}`, icon: Award },
+    { label: "Solved Problems", value: loading ? "..." : `${totalSolved} / ${totalProblems}`, icon: Award },
     { label: "Topic Tags", value: loading ? "..." : tags.length, icon: Hash },
-    { label: "Daily Streak", value: "1 day", icon: Flame }
+    { label: "Daily Streak", value: loading ? "..." : `${streak} day${streak !== 1 ? "s" : ""}`, icon: Flame }
   ];
 
   return (
@@ -146,61 +158,70 @@ export const Dashboard: React.FC = () => {
           <div className="p-5 flex-1 flex flex-col justify-between space-y-6">
             <div className="space-y-5">
               {(() => {
-                const total =
-                  Object.values(diffStats).reduce((a, b) => a + b, 0) || totalProblems || 1;
-                const getPercent = (count: number) => Math.round((count / total) * 100);
+                const getPercent = (solved: number, total: number) =>
+                  total > 0 ? Math.round((solved / total) * 100) : 0;
 
                 return [
                   {
                     label: "Novice",
-                    percent: getPercent(diffStats[1] || 0),
+                    solved: solvedStats[1] || 0,
+                    total: diffStats[1] || 0,
                     color: "bg-emerald-500",
                     diffId: 1
                   },
                   {
                     label: "Easy",
-                    percent: getPercent(diffStats[2] || 0),
+                    solved: solvedStats[2] || 0,
+                    total: diffStats[2] || 0,
                     color: "bg-cyan-500",
                     diffId: 2
                   },
                   {
                     label: "Medium",
-                    percent: getPercent(diffStats[3] || 0),
+                    solved: solvedStats[3] || 0,
+                    total: diffStats[3] || 0,
                     color: "bg-amber-500",
                     diffId: 3
                   },
                   {
                     label: "Hard",
-                    percent: getPercent(diffStats[4] || 0),
+                    solved: solvedStats[4] || 0,
+                    total: diffStats[4] || 0,
                     color: "bg-red-500",
                     diffId: 4
                   },
                   {
                     label: "Extreme",
-                    percent: getPercent(diffStats[5] || 0),
+                    solved: solvedStats[5] || 0,
+                    total: diffStats[5] || 0,
                     color: "bg-purple-500",
                     diffId: 5
                   }
-                ].map((diff) => (
-                  <div
-                    key={diff.label}
-                    onClick={() => navigate(`/problems?difficulty=${diff.diffId}`)}
-                    className="group cursor-pointer"
-                  >
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="text-foreground font-medium group-hover:underline">
-                        {diff.label}
-                      </span>
-                      <span className="text-muted-foreground text-xs">{diff.percent}%</span>
+                ].map((diff) => {
+                  const percent = getPercent(diff.solved, diff.total);
+                  return (
+                    <div
+                      key={diff.label}
+                      onClick={() => navigate(`/problems?difficulty=${diff.diffId}`)}
+                      className="group cursor-pointer"
+                    >
+                      <div className="flex justify-between text-sm mb-1.5">
+                        <span className="text-foreground font-medium group-hover:underline">
+                          {diff.label}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          {diff.solved} / {diff.total} ({percent}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${diff.color}`}
+                          style={{ width: `${percent}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${diff.color}`}
-                        style={{ width: `${diff.percent}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ));
+                  );
+                });
               })()}
             </div>
 

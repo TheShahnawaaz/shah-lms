@@ -1,6 +1,7 @@
 import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../../middlewares/auth";
 import ProblemsService from "./problems.service";
+import SubmissionsService from "./submissions.service";
 
 export class ProblemsController {
   static async listProblems(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -157,11 +158,100 @@ export class ProblemsController {
 
   static async getProblemsStats(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const stats = await ProblemsService.getProblemsStats();
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          code: 401,
+          details: "Unauthorized.",
+          data: null
+        });
+      }
+
+      const stats = await ProblemsService.getProblemsStats(userId);
       res.status(200).json({
         code: 200,
         details: "Statistics fetched successfully.",
         data: stats
+      });
+    } catch (err: any) {
+      next(err);
+    }
+  }
+
+  static async submitCode(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const problemId = parseInt(req.params.id);
+      if (isNaN(problemId)) {
+        return res.status(400).json({
+          code: 400,
+          details: "Invalid problem ID parameter.",
+          data: null
+        });
+      }
+
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          code: 401,
+          details: "Unauthorized.",
+          data: null
+        });
+      }
+
+      const { code, language, status, executionTimeMs, sampleResults } = req.body;
+      if (!code || !language || !status) {
+        return res.status(400).json({
+          code: 400,
+          details: "Missing required fields (code, language, status).",
+          data: null
+        });
+      }
+
+      const submission = await SubmissionsService.createSubmission(
+        userId,
+        problemId,
+        code,
+        language,
+        status,
+        executionTimeMs || 0,
+        sampleResults || []
+      );
+
+      res.status(201).json({
+        code: 201,
+        details: "Code submitted and saved successfully.",
+        data: submission
+      });
+    } catch (err: any) {
+      next(err);
+    }
+  }
+
+  static async getSubmissionHistory(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const problemId = parseInt(req.params.id);
+      if (isNaN(problemId)) {
+        return res.status(400).json({
+          code: 400,
+          details: "Invalid problem ID parameter.",
+          data: null
+        });
+      }
+
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          code: 401,
+          details: "Unauthorized.",
+          data: null
+        });
+      }
+
+      const history = await SubmissionsService.getSubmissionHistory(userId, problemId);
+      res.status(200).json({
+        code: 200,
+        details: "Submission history fetched.",
+        data: history
       });
     } catch (err: any) {
       next(err);

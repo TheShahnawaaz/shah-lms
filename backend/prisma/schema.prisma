@@ -16,6 +16,7 @@ model User {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   bookmarks         Bookmark[]
+  submissions       Submission[]
 }
 
 model Problem {
@@ -40,6 +41,7 @@ model Problem {
   editorials      Editorial[]
   templates       TemplateCode[]
   bookmarks       Bookmark[]
+  submissions     Submission[]
 }
 
 model Tag {
@@ -73,4 +75,18 @@ model Bookmark {
   createdAt DateTime @default(now())
 
   @@unique([userId, problemId])
+}
+
+model Submission {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId       Int
+  problem         Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  code            String
+  language        String
+  status          String   // "Accepted" | "WrongAnswer" | "TimeLimitExceeded" | "RuntimeError" | "CompilationError"
+  executionTimeMs Int
+  sampleResults   Json     // Array storing: [{ passed: boolean, status: string, output: string }]
+  createdAt       DateTime @default(now())
 }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import MathRenderer from "../MathRenderer";
-import { BookOpen, HelpCircle, Code, Clock, Terminal, Copy, Check } from "lucide-react";
+import { BookOpen, HelpCircle, Code, Clock, Terminal, Copy, Check, History, ExternalLink } from "lucide-react";
 import DifficultyBadge from "./DifficultyBadge";
 
 interface Sample {
@@ -44,12 +44,14 @@ interface ProblemDetailData {
 
 interface ProblemDescriptionPanelProps {
   problem: ProblemDetailData;
-  activeLeftTab: "desc" | "hints" | "editorial";
-  setActiveLeftTab: (tab: "desc" | "hints" | "editorial") => void;
+  activeLeftTab: "desc" | "hints" | "editorial" | "submissions";
+  setActiveLeftTab: (tab: "desc" | "hints" | "editorial" | "submissions") => void;
   activeEditorialLang: string;
   setActiveEditorialLang: (lang: string) => void;
   monacoTheme: string;
   activeMobilePane: "desc" | "editor";
+  submissionsList: any[];
+  onViewSubmissionDetail: (sub: any) => void;
   style?: React.CSSProperties;
 }
 
@@ -97,6 +99,8 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
   setActiveEditorialLang,
   monacoTheme,
   activeMobilePane,
+  submissionsList,
+  onViewSubmissionDetail,
   style
 }) => {
   const [expandedHint, setExpandedHint] = useState<"h1" | "h2" | "sa" | null>(null);
@@ -129,7 +133,8 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
         {[
           { id: "desc", label: "Description", icon: BookOpen },
           { id: "hints", label: "Hints", icon: HelpCircle },
-          { id: "editorial", label: "Solutions", icon: Code }
+          { id: "editorial", label: "Solutions", icon: Code },
+          { id: "submissions", label: "Submissions", icon: History }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -341,6 +346,76 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Submissions List Tab */}
+          {activeLeftTab === "submissions" && (
+            <div className="space-y-4 animate-in fade-in">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+                Submission History
+              </h4>
+              {submissionsList.length === 0 ? (
+                <div className="text-center py-16 text-muted-foreground text-xs font-medium my-auto border border-dashed border-border rounded-xl">
+                  No submissions yet. Write your code and click Submit to evaluate.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {submissionsList.map((sub) => {
+                    const isPassed = sub.status === "Accepted";
+                    const formattedDate = new Date(sub.createdAt).toLocaleString(undefined, {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    });
+
+                    return (
+                      <div
+                        key={sub.id}
+                        onClick={() => onViewSubmissionDetail(sub)}
+                        className="p-3.5 border border-border bg-card hover:bg-muted/30 rounded-xl shadow-sm flex items-center justify-between gap-4 cursor-pointer transition-all hover:-translate-y-0.5 group text-foreground"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={`w-2.5 h-2.5 rounded-full ${
+                            isPassed
+                              ? "bg-green-500 animate-pulse"
+                              : sub.status === "WrongAnswer"
+                                ? "bg-destructive"
+                                : "bg-yellow-500"
+                          }`} />
+                          <div>
+                            <span className="text-xs font-bold">
+                              {sub.status === "Accepted"
+                                ? "Accepted"
+                                : sub.status === "WrongAnswer"
+                                  ? "Wrong Answer"
+                                  : sub.status === "TimeLimitExceeded"
+                                    ? "TLE"
+                                    : sub.status === "CompilationError"
+                                      ? "Compile Error"
+                                      : "Runtime Error"}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground block mt-0.5">
+                              {formattedDate} • {sub.language}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          {sub.status !== "CompilationError" && (
+                            <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                              {sub.executionTimeMs} ms
+                            </span>
+                          )}
+                          <span className="text-muted-foreground hover:text-primary transition-colors text-xs flex items-center gap-1 font-bold opacity-0 group-hover:opacity-100">
+                            <span>Details</span>
+                            <ExternalLink size={11} />
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

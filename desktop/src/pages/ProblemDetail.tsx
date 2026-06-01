@@ -7,6 +7,8 @@ import ProblemDescriptionPanel from "../components/problems/ProblemDescriptionPa
 import CodeEditorPanel from "../components/problems/CodeEditorPanel";
 import ConsoleRunner from "../components/problems/ConsoleRunner";
 import { invoke } from "@tauri-apps/api/core";
+import SubmissionResultModal from "../components/problems/SubmissionResultModal";
+import SubmissionDetailModal from "../components/problems/SubmissionDetailModal";
 
 interface Sample {
   input: string;
@@ -79,7 +81,7 @@ export const ProblemDetail: React.FC = () => {
   const monacoTheme = isDarkTheme ? "vs-dark" : "light";
 
   // Tab selections
-  const [activeLeftTab, setActiveLeftTab] = useState<"desc" | "hints" | "editorial">("desc");
+  const [activeLeftTab, setActiveLeftTab] = useState<"desc" | "hints" | "editorial" | "submissions">("desc");
   const [activeMobilePane, setActiveMobilePane] = useState<"desc" | "editor">("desc");
   const [activeEditorialLang, setActiveEditorialLang] = useState<string>("");
   const [editorLang, setEditorLang] = useState<string>("C++14");
@@ -108,6 +110,17 @@ export const ProblemDetail: React.FC = () => {
   const [sampleResults, setSampleResults] = useState<(SampleResult | null)[]>([]);
   // Manual tab result
   const [manualResult, setManualResult] = useState<{ output: string; executed: boolean }>({ output: "", executed: false });
+
+  // Submissions list, selection and modal flags
+  const [submissionsList, setSubmissionsList] = useState<any[]>([]);
+  const [isResultModalOpen, setIsResultModalOpen] = useState(false);
+  const [activeSubmission, setActiveSubmission] = useState<any | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<{
+    status: string;
+    executionTimeMs: number;
+    sampleResults: any[];
+  } | null>(null);
 
   // Resize states
   const [leftWidth, setLeftWidth] = useState<number>(50); // percentage
@@ -283,6 +296,21 @@ export const ProblemDetail: React.FC = () => {
     if (id) fetchProblemDetail();
   }, [id]);
 
+  const fetchSubmissions = async () => {
+    try {
+      const res = await api.get<any[]>(`/problems/${id}/submissions`);
+      setSubmissionsList(res.data);
+    } catch (err) {
+      console.error("Failed to load submissions:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchSubmissions();
+    }
+  }, [id]);
+
   const handleLanguageChange = (lang: string) => {
     if (!problem) return;
     const prevCacheKey = `course_0_${problem.id}_${editorLang}`;
@@ -411,21 +439,123 @@ export const ProblemDetail: React.FC = () => {
     setRunStep("");
   };
 
-  const handleSubmitCode = () => {
+  const handleSubmitCode = async () => {
     if (!problem) return;
     setIsConsoleCollapsed(false);
     setIsRunning(true);
-    setRunStep("Compiling on server...");
+    setRunStep("Compiling code locally...");
 
-    setTimeout(() => {
-      setRunStep("Running on 15 test cases...");
-    }, 800);
+    // Map frontend languages to compiler expectations
+    let lang = editorLang;
+    if (lang === "C++14") lang = "C++";
+    if (lang === "Python3") lang = "Python";
 
-    setTimeout(() => {
+    const samples = problem.samples;
+    const results: any[] = new Array(samples.length).fill(null);
+    setRunStep("Evaluating on sample test cases...");
+
+    // Fire all invocations simultaneously
+    const promises = samples.map(async (sample, i) => {
+      try {
+        const res = await invoke<any>("run_code_locally", {
+          code: editorCode,
+          language: lang,
+          input: sample.input,
+          timeLimitSec: problem.timeLimitSec || 3.0,
+        });
+
+        let output = "";
+        let passed = false;
+
+        if (res.status === "CompilationError") {
+          output = res.compile_output || "Compilation failed.";
+        } else if (res.status === "TimeLimitExceeded") {
+          output = `Time Limit Exceeded (limit: ${problem.timeLimitSec || 3.0}s)`;
+        } else if (res.status === "RuntimeError") {
+          output = res.stderr || "Process crashed.";
+        } else {
+          output = res.stdout || "";
+          passed = res.stdout.trim() === sample.output.trim();
+        }
+
+        results[i] = {
+          passed,
+          status: res.status,
+          output,
+          executionTimeMs: res.execution_time_ms || 0
+        };
+      } catch (err: any) {
+        results[i] = {
+          passed: false,
+          status: "RuntimeError",
+          output: `Execution error: ${err.message || err}`,
+          executionTimeMs: 0
+        };
+      }
+    });
+
+    await Promise.allSettled(promises);
+
+    // Calculate overall status
+    let overallStatus = "Accepted";
+    let maxTime = 0;
+    
+    // Check if any error exists
+    const hasCompileError = results.some((r) => r.status === "CompilationError");
+    const hasRuntimeError = results.some((r) => r.status === "RuntimeError");
+    const hasTLE = results.some((r) => r.status === "TimeLimitExceeded");
+    const hasWrongAnswer = results.some((r) => !r.passed);
+
+    if (hasCompileError) {
+      overallStatus = "CompilationError";
+    } else if (hasRuntimeError) {
+      overallStatus = "RuntimeError";
+    } else if (hasTLE) {
+      overallStatus = "TimeLimitExceeded";
+    } else if (hasWrongAnswer) {
+      overallStatus = "WrongAnswer";
+    }
+
+    // Get max execution time
+    results.forEach((r) => {
+      if (r.executionTimeMs > maxTime) maxTime = r.executionTimeMs;
+    });
+
+    // Format sample results matching DB schema expectation
+    const dbSampleResults = results.map((r) => ({
+      passed: r.passed,
+      status: r.status,
+      output: r.output
+    }));
+
+    try {
+      // POST the submission details to backend database
+      setRunStep("Saving submission record...");
+      await api.post(`/problems/${problem.id}/submit`, {
+        code: editorCode,
+        language: editorLang,
+        status: overallStatus,
+        executionTimeMs: maxTime,
+        sampleResults: dbSampleResults
+      });
+
+      // Reload submission history list
+      fetchSubmissions();
+
+      // Show result modal
+      setSubmissionResult({
+        status: overallStatus,
+        executionTimeMs: maxTime,
+        sampleResults: dbSampleResults
+      });
+      setIsResultModalOpen(true);
+    } catch (err: any) {
+      console.error("Failed to save submission:", err);
+      alert(`Submission saved locally but failed to record online: ${err.message || err}`);
+    } finally {
       setIsRunning(false);
       setRunStep("");
-      alert("Submission Status: Accepted (15/15 test cases passed)!");
-    }, 1800);
+    }
   };
 
   if (loading) {
@@ -511,6 +641,11 @@ export const ProblemDetail: React.FC = () => {
           setActiveEditorialLang={setActiveEditorialLang}
           monacoTheme={monacoTheme}
           activeMobilePane={activeMobilePane}
+          submissionsList={submissionsList}
+          onViewSubmissionDetail={(sub) => {
+            setActiveSubmission(sub);
+            setIsDetailModalOpen(true);
+          }}
           style={
             isDesktop
               ? {
@@ -583,6 +718,23 @@ export const ProblemDetail: React.FC = () => {
           />
         </div>
       </div>
+
+      <SubmissionResultModal
+        isOpen={isResultModalOpen}
+        onClose={() => setIsResultModalOpen(false)}
+        status={submissionResult?.status || ""}
+        language={editorLang}
+        executionTimeMs={submissionResult?.executionTimeMs || 0}
+        sampleResults={submissionResult?.sampleResults || []}
+        samples={problem.samples}
+      />
+
+      <SubmissionDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        submission={activeSubmission}
+        samples={problem.samples}
+      />
     </div>
   );
 };

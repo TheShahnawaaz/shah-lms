@@ -69,6 +69,10 @@ export class ProblemsService {
           bookmarks: {
             where: { userId },
             select: { id: true }
+          },
+          submissions: {
+            where: { userId },
+            select: { status: true }
           }
         },
         orderBy: { id: "asc" },
@@ -81,11 +85,18 @@ export class ProblemsService {
     const totalPages = Math.ceil(totalCount / limit);
 
     return {
-      problems: problems.map((p) => ({
-        ...p,
-        isBookmarked: p.bookmarks.length > 0,
-        bookmarks: undefined
-      })),
+      problems: problems.map((p) => {
+        const hasAccepted = p.submissions.some((s) => s.status === "Accepted");
+        const hasSubmissions = p.submissions.length > 0;
+        const status = hasAccepted ? "Solved" : hasSubmissions ? "Attempted" : "Todo";
+        return {
+          ...p,
+          isBookmarked: p.bookmarks.length > 0,
+          status,
+          bookmarks: undefined,
+          submissions: undefined
+        };
+      }),
       pagination: {
         page,
         limit,
@@ -186,7 +197,7 @@ export class ProblemsService {
     }));
   }
 
-  static async getProblemsStats() {
+  static async getProblemsStats(userId: string) {
     const counts = await prisma.problem.groupBy({
       by: ["difficulty"],
       _count: {
@@ -199,8 +210,75 @@ export class ProblemsService {
       stats[item.difficulty] = item._count.id;
     });
 
+    // Fetch unique solved problems for this user
+    const solvedProblems = await prisma.problem.findMany({
+      where: {
+        submissions: {
+          some: {
+            userId,
+            status: "Accepted"
+          }
+        }
+      },
+      select: {
+        difficulty: true
+      }
+    });
+
+    const solvedStats: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    solvedProblems.forEach((p) => {
+      solvedStats[p.difficulty]++;
+    });
+
+    // Calculate current daily streak
+    const submissions = await prisma.submission.findMany({
+      where: { userId },
+      select: { createdAt: true },
+      orderBy: { createdAt: "desc" }
+    });
+
+    let streak = 0;
+    if (submissions.length > 0) {
+      const getLocalDateStr = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      const uniqueDates = new Set(submissions.map((s) => getLocalDateStr(new Date(s.createdAt))));
+
+      const today = new Date();
+      const todayStr = getLocalDateStr(today);
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = getLocalDateStr(yesterday);
+
+      let currentCheckDate = today;
+      if (!uniqueDates.has(todayStr) && uniqueDates.has(yesterdayStr)) {
+        currentCheckDate = yesterday;
+      }
+
+      const checkStr = getLocalDateStr(currentCheckDate);
+      if (uniqueDates.has(checkStr)) {
+        streak = 1;
+        while (true) {
+          currentCheckDate.setDate(currentCheckDate.getDate() - 1);
+          const dateStr = getLocalDateStr(currentCheckDate);
+          if (uniqueDates.has(dateStr)) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
     return {
-      difficultyDistribution: stats
+      difficultyDistribution: stats,
+      solvedDistribution: solvedStats,
+      streak
     };
   }
 }
