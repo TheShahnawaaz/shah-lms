@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProblemList from "./pages/ProblemList";
 import ProblemDetail from "./pages/ProblemDetail";
+import DownloadPage from "./pages/DownloadPage";
 import SeedPage from "./pages/admin/SeedPage";
 import AllowedUsers from "./pages/admin/AllowedUsers";
 import { Layout } from "./components/Layout";
@@ -25,6 +26,16 @@ export const App: React.FC = () => {
         <Route path="/login" element={<Login />} />
 
         {/* Private Routes */}
+        <Route
+          path="/download"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <DownloadPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dashboard"
           element={

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, Bookmark } from "lucide-react";
+import { Eye, Bookmark, CheckCircle, Circle } from "lucide-react";
 import DifficultyBadge from "./DifficultyBadge";
 
 interface ProblemSummary {
@@ -12,6 +12,7 @@ interface ProblemSummary {
   memoryLimitMb: number;
   tags: { name: string }[];
   isBookmarked: boolean;
+  status?: "Solved" | "Attempted" | "Todo";
 }
 
 interface ProblemCardListProps {
@@ -40,6 +41,15 @@ export const ProblemCardList: React.FC<ProblemCardListProps> = ({
             <div className="flex items-start justify-between gap-2">
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2">
+                  {problem.status === "Solved" ? (
+                    <span className="inline-flex items-center justify-center text-green-500" title="Solved">
+                      <CheckCircle className="size-3.5 stroke-[2.5]" />
+                    </span>
+                  ) : problem.status === "Attempted" ? (
+                    <span className="inline-flex items-center justify-center text-amber-500" title="Attempted">
+                      <Circle className="size-3 fill-current" />
+                    </span>
+                  ) : null}
                   <span className="text-xs font-mono text-muted-foreground font-semibold px-1.5 py-0.5 rounded bg-muted/60">
                     #{problem.id}
                   </span>

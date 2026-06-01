@@ -6,6 +6,7 @@ import WorkspaceHeader from "../components/problems/WorkspaceHeader";
 import ProblemDescriptionPanel from "../components/problems/ProblemDescriptionPanel";
 import CodeEditorPanel from "../components/problems/CodeEditorPanel";
 import ConsoleRunner from "../components/problems/ConsoleRunner";
+import DownloadPromptModal from "../components/problems/DownloadPromptModal";
 
 interface Sample {
   input: string;
@@ -78,7 +79,7 @@ export const ProblemDetail: React.FC = () => {
   const monacoTheme = isDarkTheme ? "vs-dark" : "light";
 
   // Tab selections
-  const [activeLeftTab, setActiveLeftTab] = useState<"desc" | "hints" | "editorial">("desc");
+  const [activeLeftTab, setActiveLeftTab] = useState<"desc" | "hints" | "editorial" | "submissions">("desc");
   const [activeMobilePane, setActiveMobilePane] = useState<"desc" | "editor">("desc");
   const [activeEditorialLang, setActiveEditorialLang] = useState<string>("");
   const [editorLang, setEditorLang] = useState<string>("C++14");
@@ -94,12 +95,16 @@ export const ProblemDetail: React.FC = () => {
   const [runnerTab, setRunnerTab] = useState<"sample" | "manual">("sample");
   const [activeSampleIdx, setActiveSampleIdx] = useState<number>(0);
   const [manualInput, setManualInput] = useState<string>("");
-  const [manualOutput, setManualOutput] = useState<string>("");
-  const [isRunning, setIsRunning] = useState(false);
-  const [runSuccess, setRunSuccess] = useState(false);
+  const manualOutput = "";
+  const isRunning = false;
+  const runSuccess = false;
   const [runExecuted, setRunExecuted] = useState(false);
-  const [runStep, setRunStep] = useState<string>("");
+  const runStep = "";
   const [bookmarked, setBookmarked] = useState(false);
+
+  // Submissions and Downloader interceptor states
+  const [submissionsList, setSubmissionsList] = useState<any[]>([]);
+  const [isDownloadPromptOpen, setIsDownloadPromptOpen] = useState(false);
 
   // Resize states
   const [leftWidth, setLeftWidth] = useState<number>(50); // percentage
@@ -275,6 +280,21 @@ export const ProblemDetail: React.FC = () => {
     if (id) fetchProblemDetail();
   }, [id]);
 
+  const fetchSubmissions = async () => {
+    try {
+      const res = await api.get<any[]>(`/problems/${id}/submissions`);
+      setSubmissionsList(res.data);
+    } catch (err) {
+      console.error("Failed to load submissions:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchSubmissions();
+    }
+  }, [id]);
+
   const handleLanguageChange = (lang: string) => {
     if (!problem) return;
     const prevCacheKey = `course_0_${problem.id}_${editorLang}`;
@@ -321,44 +341,11 @@ export const ProblemDetail: React.FC = () => {
   };
 
   const handleRunCode = () => {
-    if (!problem) return;
-    setIsConsoleCollapsed(false);
-    setIsRunning(true);
-    setRunExecuted(true);
-    setRunStep("Compiling...");
-
-    // Animate compilation phases
-    setTimeout(() => {
-      setRunStep("Running Test Case 1...");
-    }, 700);
-
-    setTimeout(() => {
-      setIsRunning(false);
-      setRunSuccess(true);
-      if (runnerTab === "manual") {
-        setManualOutput(
-          manualInput ? "Execution complete. Exit code: 0\n" + manualInput : "No manual output"
-        );
-      }
-    }, 1500);
+    setIsDownloadPromptOpen(true);
   };
 
   const handleSubmitCode = () => {
-    if (!problem) return;
-    setIsConsoleCollapsed(false);
-    setIsRunning(true);
-    setRunExecuted(true);
-    setRunStep("Compiling on server...");
-
-    setTimeout(() => {
-      setRunStep("Running on 15 test cases...");
-    }, 800);
-
-    setTimeout(() => {
-      setIsRunning(false);
-      setRunSuccess(true);
-      alert("Submission Status: Accepted (15/15 test cases passed)!");
-    }, 1800);
+    setIsDownloadPromptOpen(true);
   };
 
   if (loading) {
@@ -444,6 +431,7 @@ export const ProblemDetail: React.FC = () => {
           setActiveEditorialLang={setActiveEditorialLang}
           monacoTheme={monacoTheme}
           activeMobilePane={activeMobilePane}
+          submissionsList={submissionsList}
           style={
             isDesktop
               ? {
@@ -518,6 +506,11 @@ export const ProblemDetail: React.FC = () => {
           />
         </div>
       </div>
+
+      <DownloadPromptModal
+        isOpen={isDownloadPromptOpen}
+        onClose={() => setIsDownloadPromptOpen(false)}
+      />
     </div>
   );
 };

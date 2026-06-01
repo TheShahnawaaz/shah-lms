@@ -14,6 +14,7 @@ interface ProblemSummary {
   memoryLimitMb: number;
   tags: { name: string }[];
   isBookmarked: boolean;
+  status?: "Solved" | "Attempted" | "Todo";
 }
 
 interface TagSummary {

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, Bookmark } from "lucide-react";
+import { Eye, Bookmark, CheckCircle, Circle } from "lucide-react";
 import DifficultyBadge from "./DifficultyBadge";
 
 interface ProblemSummary {
@@ -12,6 +12,7 @@ interface ProblemSummary {
   memoryLimitMb: number;
   tags: { name: string }[];
   isBookmarked: boolean;
+  status?: "Solved" | "Attempted" | "Todo";
 }
 
 interface ProblemTableProps {
@@ -30,6 +31,7 @@ export const ProblemTable: React.FC<ProblemTableProps> = ({
       <table className="w-full text-left text-sm whitespace-nowrap">
         <thead>
           <tr className="border-b border-border bg-muted/30">
+            <th className="px-6 py-3 font-medium text-muted-foreground w-12 text-center">Status</th>
             <th className="px-6 py-3 font-medium text-muted-foreground w-16">ID</th>
             <th className="px-6 py-3 font-medium text-muted-foreground">Title</th>
             <th className="px-6 py-3 font-medium text-muted-foreground">Difficulty</th>
@@ -48,6 +50,21 @@ export const ProblemTable: React.FC<ProblemTableProps> = ({
                 transition={{ duration: 0.2 }}
                 className="hover:bg-muted/30 transition-colors group"
               >
+                <td className="px-6 py-4 text-center">
+                  {problem.status === "Solved" ? (
+                    <span className="inline-flex items-center justify-center text-green-500" title="Solved">
+                      <CheckCircle className="size-4 stroke-[2.5]" />
+                    </span>
+                  ) : problem.status === "Attempted" ? (
+                    <span className="inline-flex items-center justify-center text-amber-500" title="Attempted">
+                      <Circle className="size-3 fill-current" />
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center justify-center text-muted-foreground/35" title="Todo">
+                      <Circle className="size-3" />
+                    </span>
+                  )}
+                </td>
                 <td className="px-6 py-4 text-muted-foreground font-mono">{problem.id}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">

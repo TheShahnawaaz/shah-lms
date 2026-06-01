@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Bookmark
+  Bookmark,
+  Download
 } from "lucide-react";
 
 interface SidebarProps {
@@ -238,6 +239,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           ))}
       </nav>
+
+      {/* Download App CTA - bottom of sidebar, above footer */}
+      <div className="px-3 pb-2">
+        <Link
+          to="/download"
+          onClick={onCloseMobile}
+          className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/15 border border-primary/20 hover:border-primary/30 text-primary transition-all duration-150 text-sm font-medium ${
+            isCollapsed && !isMobile ? "justify-center px-2" : ""
+          }`}
+          title={isCollapsed && !isMobile ? "Download Desktop App" : undefined}
+        >
+          <Download size={16} className="flex-shrink-0" />
+          {!isCollapsed || isMobile ? (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="truncate leading-none"
+            >
+              Download App
+            </motion.span>
+          ) : null}
+        </Link>
+      </div>
 
       {/* Sidebar Footer / User Dropdown */}
       <div className="p-3 border-t border-border relative" ref={footerRef}>
