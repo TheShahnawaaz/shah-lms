@@ -121,6 +121,12 @@ npm install
 npm run dev            # Runs Vite Server at http://localhost:5173
 ```
 
+### 4. macOS Gatekeeper Whitelisting
+If you download or compile the desktop application and macOS prevents it from launching with the error: *"Apple could not verify 'ShahLMS.app' is free of malware..."*, you can whitelist it locally by removing the macOS quarantine flag:
+```bash
+xattr -d com.apple.quarantine /Applications/ShahLMS.app
+```
+
 *For troubleshooting and detailed environment setup instructions, refer to the [Developer Setup Guide](file:///Users/shahnawaz/Desktop/Projects/Playground/AZ_Exploration/platform/docs/setup_guide.md).*
 
 ---
