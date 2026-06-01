@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { ChevronRight, Sun, Moon, LogOut, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
+import { UpdateChecker } from "./UpdateChecker";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -88,6 +89,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground transition-colors duration-300 relative">
+      <UpdateChecker />
       {/* Sidebar - collapsible state is managed here */}
       <Sidebar
         isCollapsed={isCollapsed}
