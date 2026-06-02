@@ -42,7 +42,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   }, []);
 
   return (
-    <header className="h-[56px] border-b border-border flex items-center justify-between px-4 shrink-0 bg-card/60 backdrop-blur-md relative z-40">
+    <header className="h-14 border-b border-border flex items-center justify-between px-4 shrink-0 bg-card/60 backdrop-blur-md relative z-40">
       <div className="flex items-center gap-3 min-w-0">
         {/* Back button */}
         <Link

@@ -201,7 +201,7 @@ export const ProblemList: React.FC = () => {
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           {isBookmarksPage ? "Bookmarked Problems" : "Problems"}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-foreground/80">
           {isBookmarksPage
             ? "Your saved tasks. Review, manage, and practice them here."
             : "Solve tasks, explore editorials, and improve your skills."}

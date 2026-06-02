@@ -189,7 +189,7 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
                     Input Format
                   </h3>
-                  <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
                     <MathRenderer content={problem.inputFormat} />
                   </div>
                 </div>
@@ -201,7 +201,7 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
                     Output Format
                   </h3>
-                  <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
                     <MathRenderer content={problem.outputFormat} />
                   </div>
                 </div>
@@ -213,7 +213,7 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
                     Constraints
                   </h3>
-                  <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed font-mono">
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed font-mono">
                     <MathRenderer content={problem.constraints} />
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
                         </div>
                       </div>
                       {sample.explanation && (
-                        <div className="pt-2.5 mt-2 text-xs border-t border-border/40 text-muted-foreground leading-relaxed">
+                        <div className="text-xs text-foreground/90 leading-relaxed pt-2 border-t border-border/40">
                           <strong className="text-foreground">Explanation: </strong>
                           <MathRenderer content={sample.explanation} />
                         </div>
@@ -282,7 +282,7 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
                     Notes
                   </h3>
-                  <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
                     <MathRenderer content={problem.note} />
                   </div>
                 </div>
@@ -335,7 +335,7 @@ export const ProblemDescriptionPanel: React.FC<ProblemDescriptionPanelProps> = (
                       </span>
                     </button>
                     {expandedHint === hint.id && (
-                      <div className="p-4 bg-background/50 text-sm text-muted-foreground leading-relaxed">
+                      <div className="p-4 bg-background/50 text-sm text-foreground leading-relaxed">
                         {hint.content ? (
                           <MathRenderer content={hint.content} />
                         ) : (

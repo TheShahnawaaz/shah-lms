@@ -54,31 +54,31 @@ const PreBlock: React.FC<PreBlockProps> = ({ children, ...props }) => {
 
   return (
     <PreContext.Provider value={true}>
-      <div className="relative group my-4 rounded-xl border border-borderDark bg-cardLight overflow-hidden shadow-sm">
+      <div className="relative group my-4 rounded-xl border border-border bg-muted/20 overflow-hidden shadow-sm">
         {/* Header bar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-borderDark text-xs text-textMuted select-none">
-          <span className="font-mono uppercase tracking-wider text-indigoAccent/90 font-semibold">
+        <div className="flex items-center justify-between px-4 py-2 bg-muted/40 border-b border-border text-xs text-muted-foreground select-none">
+          <span className="font-mono uppercase tracking-wider text-primary font-bold">
             {language || "code block"}
           </span>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 hover:text-textMain transition-colors duration-200 focus:outline-none"
+            className="flex items-center gap-1.5 hover:text-foreground transition-colors duration-200 focus:outline-none font-semibold"
           >
             {copied ? (
               <>
-                <Check size={13} className="text-emeraldAccent" />
-                <span className="text-emeraldAccent font-medium">Copied!</span>
+                <Check size={13} className="text-emerald-500" />
+                <span className="text-emerald-500 font-bold">Copied!</span>
               </>
             ) : (
               <>
                 <Copy size={13} />
-                <span className="font-medium">Copy</span>
+                <span>Copy</span>
               </>
             )}
           </button>
         </div>
         <pre
-          className="p-4 overflow-x-auto text-sm font-mono text-textMain/90 leading-relaxed max-h-[450px]"
+          className="!bg-transparent !m-0 p-4 overflow-x-auto text-sm font-mono text-foreground leading-relaxed max-h-[450px]"
           {...props}
         >
           {children}
@@ -175,22 +175,22 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content }) => {
     .join("\n");
 
   return (
-    <div className="prose prose-invert max-w-none text-textMain/90 text-[15px] leading-relaxed selection:bg-indigoAccent/30">
+    <div className="prose dark:prose-invert max-w-none text-foreground prose-headings:text-foreground prose-p:text-foreground prose-p:leading-relaxed prose-li:text-foreground prose-strong:text-foreground text-[14px] sm:text-[15px] leading-relaxed selection:bg-primary/20">
       <ReactMarkdown
         remarkPlugins={[remarkMath]}
         rehypePlugins={[rehypeKatex]}
         components={{
           h1: ({ node, ...props }) => (
             <h1
-              className="text-xl font-bold mt-4 mb-2 text-white border-b border-borderDark pb-1"
+              className="text-xl font-bold mt-4 mb-2 text-foreground border-b border-border pb-1"
               {...props}
             />
           ),
           h2: ({ node, ...props }) => (
-            <h2 className="text-lg font-bold mt-3 mb-2 text-white" {...props} />
+            <h2 className="text-lg font-bold mt-3 mb-2 text-foreground" {...props} />
           ),
           h3: ({ node, ...props }) => (
-            <h3 className="text-base font-bold mt-2 mb-1 text-white" {...props} />
+            <h3 className="text-base font-bold mt-2 mb-1 text-foreground" {...props} />
           ),
           p: ({ node, ...props }) => <p className="mb-3" {...props} />,
           ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
@@ -200,7 +200,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content }) => {
           li: ({ node, ...props }) => <li className="mb-0.5" {...props} />,
           img: ({ node, ...props }) => (
             <div className="flex justify-center my-4 select-none">
-              <div className="bg-white p-4 rounded-xl border border-borderDark max-w-full md:max-w-[85%] shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-border max-w-full md:max-w-[85%] shadow-sm">
                 <img
                   className="rounded-lg max-h-[350px] object-contain mx-auto"
                   {...props}
@@ -211,7 +211,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content }) => {
           ),
           a: ({ node, ...props }) => (
             <a
-              className="text-emeraldAccent hover:text-emeraldAccent/80 underline underline-offset-4 transition-colors font-semibold"
+              className="text-emerald-600 dark:text-emerald-400 hover:opacity-80 underline underline-offset-4 transition-colors font-semibold"
               target="_blank"
               rel="noopener noreferrer"
               {...props}
@@ -229,7 +229,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content }) => {
             }
             return (
               <code
-                className="bg-cardLight px-1.5 py-0.5 rounded text-indigoAccent text-sm font-mono border border-borderDark"
+                className="bg-muted px-1.5 py-0.5 rounded text-primary text-sm font-mono border border-border"
                 {...props}
               >
                 {children}
@@ -237,25 +237,25 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content }) => {
             );
           },
           table: ({ node, ...props }) => (
-            <div className="overflow-x-auto my-4 rounded-lg border border-borderDark">
-              <table className="min-w-full divide-y divide-borderDark bg-card/45" {...props} />
+            <div className="overflow-x-auto my-4 rounded-lg border border-border">
+              <table className="min-w-full divide-y divide-border bg-card/45" {...props} />
             </div>
           ),
-          thead: ({ node, ...props }) => <thead className="bg-cardLight" {...props} />,
+          thead: ({ node, ...props }) => <thead className="bg-muted/50" {...props} />,
           tbody: ({ node, ...props }) => (
-            <tbody className="divide-y divide-borderDark/50" {...props} />
+            <tbody className="divide-y divide-border/50" {...props} />
           ),
           tr: ({ node, ...props }) => (
-            <tr className="hover:bg-cardLight/30 transition-colors" {...props} />
+            <tr className="hover:bg-muted/30 transition-colors" {...props} />
           ),
           th: ({ node, ...props }) => (
             <th
-              className="px-4 py-2.5 text-left text-xs font-semibold text-textMuted uppercase tracking-wider font-sans border-b border-borderDark"
+              className="px-4 py-2.5 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider font-sans border-b border-border"
               {...props}
             />
           ),
           td: ({ node, ...props }) => (
-            <td className="px-4 py-2 text-sm text-textMain/80 font-mono" {...props} />
+            <td className="px-4 py-2 text-sm text-foreground font-mono" {...props} />
           )
         }}
       >

@@ -5,6 +5,7 @@ import morgan from "morgan";
 import authRoutes from "./features/auth/auth.routes";
 import problemRoutes from "./features/problems/problems.routes";
 import adminRoutes from "./features/admin/admin.routes";
+import courseRoutes from "./features/courses/courses.routes";
 import { errorHandler } from "./middlewares/error";
 
 // Load environment variables
@@ -33,6 +34,7 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/courses", courseRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

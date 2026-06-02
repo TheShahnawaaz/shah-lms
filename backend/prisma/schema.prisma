@@ -17,6 +17,7 @@ model User {
   updatedAt         DateTime @updatedAt
   bookmarks         Bookmark[]
   submissions       Submission[]
+  courseCompletions ResourceCompletion[]
 }
 
 model Problem {
@@ -42,6 +43,7 @@ model Problem {
   templates       TemplateCode[]
   bookmarks       Bookmark[]
   submissions     Submission[]
+  resources       Resource[]
 }
 
 model Tag {
@@ -89,4 +91,64 @@ model Submission {
   executionTimeMs Int
   sampleResults   Json     // Array storing: [{ passed: boolean, status: string, output: string }]
   createdAt       DateTime @default(now())
+}
+
+model Course {
+  id              Int       @id // Matches original Course ID from API
+  name            String
+  description     String?
+  image           String?
+  instructorImage String?
+  instructorName  String?
+  difficulty      String?
+  isFree          Boolean   @default(false)
+  timeInMinutes   Int       @default(0)
+  hash            String?   // MD5 hash of the source JSON for change tracking
+  fullyScraped    Boolean   @default(false)
+  isVisible       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  chapters        Chapter[]
+}
+
+model Chapter {
+  id        Int        @id // Matches original Chapter ID from API
+  courseId  Int
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name      String
+  order     Int        // 1-based order index matching syllabus sequence
+  playlists Playlist[]
+}
+
+model Playlist {
+  id        Int        @id // Matches original Playlist ID from API
+  chapterId Int
+  chapter   Chapter    @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  name      String
+  order     Int        // 1-based order index matching syllabus sequence
+  resources Resource[]
+}
+
+model Resource {
+  id         Int                  @id // Matches original Resource ID from API
+  playlistId Int
+  playlist   Playlist             @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  name       String
+  type       String               // "READING_MATERIAL" | "CODING_PROBLEM" | "VIDEO" | "MCQ" | "QUIZ"
+  order      Int                  // 1-based order index matching playlist sequence
+  problemId  Int?                 // Nullable link to the global Problem model if type == "CODING_PROBLEM"
+  problem    Problem?             @relation(fields: [problemId], references: [id], onDelete: SetNull)
+  details    Json?                // Dynamic payload (HTML blocks, MCQ options, Video metadata, or EXTERNAL lists)
+  completions ResourceCompletion[]
+}
+
+model ResourceCompletion {
+  id          String   @id @default(uuid())
+  userId      String
+  resourceId  Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  completedAt DateTime @default(now())
+
+  @@unique([userId, resourceId])
 }

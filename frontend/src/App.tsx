@@ -5,8 +5,12 @@ import Dashboard from "./pages/Dashboard";
 import ProblemList from "./pages/ProblemList";
 import ProblemDetail from "./pages/ProblemDetail";
 import DownloadPage from "./pages/DownloadPage";
+import CoursesDashboard from "./pages/CoursesDashboard";
+import CourseViewer from "./pages/CourseViewer";
 import SeedPage from "./pages/admin/SeedPage";
 import AllowedUsers from "./pages/admin/AllowedUsers";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import CourseImporter from "./pages/admin/CourseImporter";
 import { Layout } from "./components/Layout";
 
 // Helper component for Route protection
@@ -32,6 +36,36 @@ export const App: React.FC = () => {
             <ProtectedRoute>
               <Layout>
                 <DownloadPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CoursesDashboard />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:courseId"
+          element={
+            <ProtectedRoute>
+              <Layout fullWidth={true}>
+                <CourseViewer />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:courseId/resource/:resourceId"
+          element={
+            <ProtectedRoute>
+              <Layout fullWidth={true}>
+                <CourseViewer />
               </Layout>
             </ProtectedRoute>
           }
@@ -79,6 +113,16 @@ export const App: React.FC = () => {
 
         {/* Admin Routes */}
         <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AdminDashboard />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/seed"
           element={
             <ProtectedRoute>
@@ -94,6 +138,16 @@ export const App: React.FC = () => {
             <ProtectedRoute>
               <Layout>
                 <AllowedUsers />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/courses"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CourseImporter />
               </Layout>
             </ProtectedRoute>
           }

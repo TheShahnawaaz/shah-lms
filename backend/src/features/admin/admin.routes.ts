@@ -180,4 +180,158 @@ router.delete(
   }
 );
 
+// POST import course from JSON payload
+router.post(
+  "/courses/import",
+  authMiddleware,
+  adminMiddleware,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const coursePayload = req.body;
+
+    if (!coursePayload || !coursePayload.course_id || !coursePayload.course_name) {
+      return res.status(400).json({
+        code: 400,
+        details: "Bad Request: Invalid course JSON structure.",
+        data: null
+      });
+    }
+
+    try {
+      const result = await AdminService.importCourse(coursePayload);
+      return res.status(200).json({
+        code: 200,
+        details: "Course import processed.",
+        data: result
+      });
+    } catch (err: any) {
+      return res.status(500).json({
+        code: 500,
+        details: err.message || "Failed to import course.",
+        data: null
+      });
+    }
+  }
+);
+
+// GET admin system statistics
+router.get(
+  "/stats",
+  authMiddleware,
+  adminMiddleware,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const stats = await AdminService.getSystemStats();
+      return res.status(200).json({
+        code: 200,
+        details: "System statistics retrieved.",
+        data: stats
+      });
+    } catch (err: any) {
+      return res.status(500).json({
+        code: 500,
+        details: err.message || "Failed to retrieve statistics.",
+        data: null
+      });
+    }
+  }
+);
+
+// GET list all courses for admin
+router.get(
+  "/courses",
+  authMiddleware,
+  adminMiddleware,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const courses = await AdminService.listCoursesForAdmin();
+      return res.status(200).json({
+        code: 200,
+        details: "Courses list fetched for admin.",
+        data: courses
+      });
+    } catch (err: any) {
+      return res.status(500).json({
+        code: 500,
+        details: err.message || "Failed to retrieve courses list.",
+        data: null
+      });
+    }
+  }
+);
+
+// PATCH toggle course visibility
+router.patch(
+  "/courses/:id/visibility",
+  authMiddleware,
+  adminMiddleware,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const courseId = parseInt(req.params.id);
+    const { isVisible } = req.body;
+
+    if (isNaN(courseId)) {
+      return res.status(400).json({
+        code: 400,
+        details: "Invalid course ID parameter.",
+        data: null
+      });
+    }
+
+    if (typeof isVisible !== "boolean") {
+      return res.status(400).json({
+        code: 400,
+        details: "Bad Request: 'isVisible' must be a boolean in the request body.",
+        data: null
+      });
+    }
+
+    try {
+      const updatedCourse = await AdminService.toggleCourseVisibility(courseId, isVisible);
+      return res.status(200).json({
+        code: 200,
+        details: "Course visibility updated successfully.",
+        data: updatedCourse
+      });
+    } catch (err: any) {
+      return res.status(500).json({
+        code: 500,
+        details: err.message || "Failed to toggle course visibility.",
+        data: null
+      });
+    }
+  }
+);
+
+// DELETE course
+router.delete(
+  "/courses/:id",
+  authMiddleware,
+  adminMiddleware,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const courseId = parseInt(req.params.id);
+
+    if (isNaN(courseId)) {
+      return res.status(400).json({
+        code: 400,
+        details: "Invalid course ID parameter.",
+        data: null
+      });
+    }
+
+    try {
+      const result = await AdminService.deleteCourse(courseId);
+      return res.status(200).json({
+        code: 200,
+        details: "Course deleted successfully.",
+        data: result
+      });
+    } catch (err: any) {
+      return res.status(500).json({
+        code: 500,
+        details: err.message || "Failed to delete course.",
+        data: null
+      });
+    }
+  }
+);
+
 export default router;
