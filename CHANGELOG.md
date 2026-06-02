@@ -2,6 +2,18 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.1.6] - 2026-06-03
+
+### Added
+- Ported the LMS Dashboard and Course Viewer features from frontend web to desktop.
+- Integrated C++/Python code compilation & execution in inline course blocks using Tauri's native local compiler subprocess.
+- Created administrative pages for allowed users and course import directly in the desktop app.
+- Configured explicit component mappings for paragraphs, lists, and headers in `ReactMarkdown` to support WKWebView rendering on macOS/Tauri desktop.
+
+### Fixed
+- Made the inline terminal output respect the active global theme (light/dark mode).
+- Made the desktop auto-updater changelog box scrollable.
+
 ## [0.1.5] - 2026-06-01
 
 ### Added

@@ -12,7 +12,9 @@ import {
   ChevronRight,
   X,
   Bookmark,
-  Cpu
+  Cpu,
+  BookOpen,
+  LayoutDashboard
 } from "lucide-react";
 import { CompilerSettingsModal } from "./problems/CompilerSettingsModal";
 
@@ -104,6 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: "Platform",
       items: [
         { name: "Dashboard", path: "/dashboard", icon: Home },
+        { name: "Courses", path: "/courses", icon: BookOpen },
         { name: "Problems", path: "/problems", icon: Code2 },
         { name: "Bookmarks", path: "/bookmarks", icon: Bookmark }
       ]
@@ -112,7 +115,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: "Admin",
       visible: isAdmin,
       items: [
-        { name: "Database Seeder", path: "/admin/seed", icon: Settings },
+        { name: "Admin Dashboard", path: "/admin", icon: LayoutDashboard },
+        { name: "Course Management", path: "/admin/courses", icon: BookOpen },
+        { name: "Problem Seeder", path: "/admin/seed", icon: Settings },
         { name: "Allowed Users", path: "/admin/users", icon: Users }
       ]
     }
@@ -211,7 +216,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {group.items.map((item) => {
                   const isActive =
                     location.pathname === item.path ||
-                    (item.path !== "/dashboard" && location.pathname.startsWith(item.path + "/"));
+                    (item.path !== "/dashboard" &&
+                      item.path !== "/admin" &&
+                      location.pathname.startsWith(item.path + "/"));
                   const Icon = item.icon;
                   return (
                     <Link

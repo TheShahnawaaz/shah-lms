@@ -199,15 +199,15 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content }) => {
           ),
           li: ({ node, ...props }) => <li className="mb-0.5" {...props} />,
           img: ({ node, ...props }) => (
-            <div className="flex justify-center my-4 select-none">
-              <div className="bg-white p-4 rounded-xl border border-border max-w-full md:max-w-[85%] shadow-sm">
+            <span className="flex justify-center my-4 select-none">
+              <span className="bg-white p-4 rounded-xl border border-border max-w-full md:max-w-[85%] shadow-sm inline-block">
                 <img
                   className="rounded-lg max-h-[350px] object-contain mx-auto"
                   {...props}
                   alt={props.alt || "Problem illustration"}
                 />
-              </div>
-            </div>
+              </span>
+            </span>
           ),
           a: ({ node, ...props }) => (
             <a

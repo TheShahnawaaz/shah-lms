@@ -95,9 +95,9 @@ export function UpdateChecker() {
       </div>
 
       {update.body && status === "idle" && (
-        <p className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border/40 line-clamp-2 leading-relaxed">
+        <div className="text-[11px] text-muted-foreground bg-muted/35 p-2.5 rounded-lg border border-border/40 max-h-32 overflow-y-auto leading-relaxed whitespace-pre-wrap select-text">
           {update.body}
-        </p>
+        </div>
       )}
 
       {status === "idle" && (

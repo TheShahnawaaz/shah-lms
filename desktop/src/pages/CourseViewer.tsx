@@ -37,7 +37,8 @@ import InlineCodeEditor from "../components/courses/InlineCodeEditor";
 import ProblemDescriptionPanel from "../components/problems/ProblemDescriptionPanel";
 import CodeEditorPanel from "../components/problems/CodeEditorPanel";
 import ConsoleRunner from "../components/problems/ConsoleRunner";
-import DownloadPromptModal from "../components/problems/DownloadPromptModal";
+import SubmissionResultModal from "../components/problems/SubmissionResultModal";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Resource {
   resource_id: number;
@@ -484,7 +485,6 @@ export const CourseViewer: React.FC = () => {
   const [fontSize, setFontSize] = useState<number>(14);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [isDownloadPromptOpen, setIsDownloadPromptOpen] = useState(false);
 
   // Integrated console runner states
   const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(false);
@@ -492,6 +492,18 @@ export const CourseViewer: React.FC = () => {
   const [activeSampleIdx, setActiveSampleIdx] = useState<number>(0);
   const [manualInput, setManualInput] = useState<string>("");
   const [submissionsList, setSubmissionsList] = useState<any[]>([]);
+
+  // Local compilation states matching ProblemDetail.tsx structure
+  const [isRunning, setIsRunning] = useState(false);
+  const [runStep, setRunStep] = useState<string>("");
+  const [sampleResults, setSampleResults] = useState<(any | null)[]>([]);
+  const [manualResult, setManualResult] = useState<{ output: string; executed: boolean }>({ output: "", executed: false });
+  const [isResultModalOpen, setIsResultModalOpen] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<{
+    status: string;
+    executionTimeMs: number;
+    sampleResults: any[];
+  } | null>(null);
 
   // Split View widths & Heights for integrated coding problem
   const [leftWidth, setLeftWidth] = useState<number>(50); // percentage
@@ -817,7 +829,6 @@ export const CourseViewer: React.FC = () => {
         );
     }
 
-    // Since our local SVG files for LeetCode, Codeforces, AtCoder, CodeChef, and SPOJ are already colorful, we only need to invert HackerEarth in dark mode (as it is a black SVG from simpleicons)
     const shouldInvert = cleanPlatform === "HACKEREARTH";
 
     return (
@@ -826,7 +837,6 @@ export const CourseViewer: React.FC = () => {
         alt={platform}
         className={`w-8 h-8 object-contain shrink-0 ${shouldInvert ? "dark:invert" : ""}`}
         onError={(e) => {
-          // Fallback to text box if loading fails
           e.currentTarget.style.display = "none";
         }}
       />
@@ -840,7 +850,208 @@ export const CourseViewer: React.FC = () => {
     }));
   };
 
-  // Detect if the current resource is a coding problem for layout purposes
+  // ─── Local C++/Python code compilation & execution (Tauri backend subprocess) ───
+  const handleRunCode = async () => {
+    if (!codingProblem) return;
+    setIsConsoleCollapsed(false);
+    setIsRunning(true);
+    setRunStep("Compiling locally...");
+
+    // Map frontend languages to compiler expectations
+    let lang = editorLang;
+    if (lang === "C++14") lang = "C++";
+    if (lang === "Python3") lang = "Python";
+
+    if (runnerTab === "manual") {
+      // Manual tab: run against custom input only
+      try {
+        const res = await invoke<any>("run_code_locally", {
+          code: editorCode,
+          language: lang,
+          input: manualInput,
+          timeLimitSec: codingProblem.timeLimitSec || 3.0,
+        });
+        let output = "";
+        if (res.status === "CompilationError") {
+          output = `Compilation Error:\n${res.compile_output}`;
+        } else if (res.status === "TimeLimitExceeded") {
+          output = `Time Limit Exceeded (limit: ${codingProblem.timeLimitSec || 3.0}s)`;
+        } else if (res.status === "RuntimeError") {
+          output = `Runtime Error (Exit Code: ${res.exit_code ?? "?"})\n${res.stderr || "Process crashed."}`;
+        } else {
+          output = res.stdout || "(No output)";
+        }
+        setManualResult({ output, executed: true });
+      } catch (err: any) {
+        setManualResult({ output: `Execution error: ${err.message || err}`, executed: true });
+      }
+      setIsRunning(false);
+      setRunStep("");
+      return;
+    }
+
+    // Sample tab: run ALL samples in parallel
+    const samples = codingProblem.samples;
+    const results: (any | null)[] = new Array(samples.length).fill(null);
+    setSampleResults(new Array(samples.length).fill(null));
+    setRunStep("Running all samples...");
+
+    const promises = samples.map(async (sample, i) => {
+      try {
+        const res = await invoke<any>("run_code_locally", {
+          code: editorCode,
+          language: lang,
+          input: sample.input,
+          timeLimitSec: codingProblem.timeLimitSec || 3.0,
+        });
+
+        let output = "";
+        let passed = false;
+
+        if (res.status === "CompilationError") {
+          output = `Compilation Error:\n${res.compile_output}`;
+        } else if (res.status === "TimeLimitExceeded") {
+          output = `Time Limit Exceeded (limit: ${codingProblem.timeLimitSec || 3.0}s)`;
+        } else if (res.status === "RuntimeError") {
+          output = `Runtime Error (Exit Code: ${res.exit_code ?? "?"})\n${res.stderr || "Process crashed."}`;
+        } else {
+          output = res.stdout || "(No output)";
+          passed = res.stdout.trim() === sample.output.trim();
+        }
+
+        results[i] = { output, passed, status: res.status };
+        setSampleResults([...results]);
+      } catch (err: any) {
+        results[i] = { output: `Execution error: ${err.message || err}`, passed: false, status: "RuntimeError" };
+        setSampleResults([...results]);
+      }
+    });
+
+    await Promise.allSettled(promises);
+    setIsRunning(false);
+    setRunStep("");
+  };
+
+  const handleSubmitCode = async () => {
+    if (!codingProblem) return;
+    setIsConsoleCollapsed(false);
+    setIsRunning(true);
+    setRunStep("Compiling code locally...");
+
+    // Map frontend languages to compiler expectations
+    let lang = editorLang;
+    if (lang === "C++14") lang = "C++";
+    if (lang === "Python3") lang = "Python";
+
+    const samples = codingProblem.samples;
+    const results: any[] = new Array(samples.length).fill(null);
+    setRunStep("Evaluating on sample test cases...");
+
+    const promises = samples.map(async (sample, i) => {
+      try {
+        const res = await invoke<any>("run_code_locally", {
+          code: editorCode,
+          language: lang,
+          input: sample.input,
+          timeLimitSec: codingProblem.timeLimitSec || 3.0,
+        });
+
+        let output = "";
+        let passed = false;
+
+        if (res.status === "CompilationError") {
+          output = res.compile_output || "Compilation failed.";
+        } else if (res.status === "TimeLimitExceeded") {
+          output = `Time Limit Exceeded (limit: ${codingProblem.timeLimitSec || 3.0}s)`;
+        } else if (res.status === "RuntimeError") {
+          output = res.stderr || "Process crashed.";
+        } else {
+          output = res.stdout || "";
+          passed = res.stdout.trim() === sample.output.trim();
+        }
+
+        results[i] = {
+          passed,
+          status: res.status,
+          output,
+          executionTimeMs: res.execution_time_ms || 0
+        };
+      } catch (err: any) {
+        results[i] = {
+          passed: false,
+          status: "RuntimeError",
+          output: `Execution error: ${err.message || err}`,
+          executionTimeMs: 0
+        };
+      }
+    });
+
+    await Promise.allSettled(promises);
+
+    let overallStatus = "Accepted";
+    let maxTime = 0;
+    
+    const hasCompileError = results.some((r) => r.status === "CompilationError");
+    const hasRuntimeError = results.some((r) => r.status === "RuntimeError");
+    const hasTLE = results.some((r) => r.status === "TimeLimitExceeded");
+    const hasWrongAnswer = results.some((r) => !r.passed);
+
+    if (hasCompileError) {
+      overallStatus = "CompilationError";
+    } else if (hasRuntimeError) {
+      overallStatus = "RuntimeError";
+    } else if (hasTLE) {
+      overallStatus = "TimeLimitExceeded";
+    } else if (hasWrongAnswer) {
+      overallStatus = "WrongAnswer";
+    }
+
+    results.forEach((r) => {
+      if (r.executionTimeMs > maxTime) maxTime = r.executionTimeMs;
+    });
+
+    const dbSampleResults = results.map((r) => ({
+      passed: r.passed,
+      status: r.status,
+      output: r.output
+    }));
+
+    try {
+      setRunStep("Saving submission record...");
+      await api.post(`/problems/${codingProblem.id}/submit`, {
+        code: editorCode,
+        language: editorLang,
+        status: overallStatus,
+        executionTimeMs: maxTime,
+        sampleResults: dbSampleResults
+      });
+
+      // Reload submissions list
+      try {
+        const subs = await api.get<any[]>(`/problems/${codingProblem.id}/submissions`);
+        setSubmissionsList(subs.data);
+      } catch (err) {
+        console.error("Failed to load submissions list:", err);
+      }
+
+      // If user solved it successfully, sync syllabus to show green check
+      await fetchSyllabus(false);
+
+      setSubmissionResult({
+        status: overallStatus,
+        executionTimeMs: maxTime,
+        sampleResults: dbSampleResults
+      });
+      setIsResultModalOpen(true);
+    } catch (err: any) {
+      console.error("Failed to save submission:", err);
+      alert(`Submission saved locally but failed to record online: ${err.message || err}`);
+    } finally {
+      setIsRunning(false);
+      setRunStep("");
+    }
+  };
+
   const isCodingProblemView = activeResource?.resource_type === "CODING_PROBLEM";
 
   if (loadingSyllabus && !course) {
@@ -868,7 +1079,7 @@ export const CourseViewer: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-background text-foreground relative">
-      {/* ═══ Fix 5: WorkspaceHeader-style Top Bar ═══ */}
+      {/* WorkspaceHeader-style Top Bar */}
       <header className="h-14 border-b border-border flex items-center justify-between px-4 shrink-0 bg-card/60 backdrop-blur-md relative z-40">
         <div className="flex items-center gap-3 min-w-0">
           {/* Back button */}
@@ -900,7 +1111,7 @@ export const CourseViewer: React.FC = () => {
 
         {/* Right side actions */}
         <div className="flex items-center gap-2.5">
-          {/* Header Navigation Controls (Option C) */}
+          {/* Header Navigation Controls */}
           {(prevResource || nextResource) && (
             <div className="flex items-center gap-1 border border-border rounded-lg p-0.5 bg-muted/25 dark:bg-muted/10 mr-1 shrink-0">
               <button
@@ -1007,7 +1218,7 @@ export const CourseViewer: React.FC = () => {
         </div>
       </header>
 
-      {/* ═══ Main Content Area (full width, syllabus is overlay) ═══ */}
+      {/* Main Content Area */}
       <div className="flex-1 flex min-h-0 relative overflow-hidden">
         {/* Content Pane — always fills full width */}
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
@@ -1023,7 +1234,7 @@ export const CourseViewer: React.FC = () => {
             </div>
           ) : activeResource ? (
             <>
-              {/* ═══ Fix 3: CODING_PROBLEM fills full viewport ═══ */}
+              {/* CODING_PROBLEM fills full viewport */}
               {isCodingProblemView ? (
                 <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative select-text">
                   {loadingCodingProblem ? (
@@ -1092,16 +1303,14 @@ export const CourseViewer: React.FC = () => {
                           setRunnerTab={setRunnerTab}
                           activeSampleIdx={activeSampleIdx}
                           setActiveSampleIdx={setActiveSampleIdx}
-                          runExecuted={false}
-                          setRunExecuted={() => {}}
-                          runSuccess={false}
-                          isRunning={false}
-                          runStep={""}
+                          isRunning={isRunning}
+                          runStep={runStep}
+                          sampleResults={sampleResults}
+                          manualResult={manualResult}
                           manualInput={manualInput}
                           setManualInput={setManualInput}
-                          manualOutput={""}
-                          onRunCode={() => setIsDownloadPromptOpen(true)}
-                          onSubmitCode={() => setIsDownloadPromptOpen(true)}
+                          onRunCode={handleRunCode}
+                          onSubmitCode={handleSubmitCode}
                           consoleHeight={consoleHeight}
                           isConsoleDragging={isConsoleDragging}
                           onResizeMouseDown={handleConsoleResizeMouseDown}
@@ -1111,7 +1320,7 @@ export const CourseViewer: React.FC = () => {
                   ) : null}
                 </div>
               ) : (
-                /* ═══ Non-coding resource: scrollable content ═══ */
+                /* Non-coding resource: scrollable content */
                 <div className="flex-1 min-h-0 overflow-y-auto p-6 scroll-smooth">
                   <div className="max-w-4xl mx-auto space-y-6 pb-20">
                     {/* Type 1: VIDEO */}
@@ -1127,7 +1336,7 @@ export const CourseViewer: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Type 2: READING_MATERIAL — Fix 1 & Fix 2 */}
+                    {/* Type 2: READING_MATERIAL */}
                     {activeResource.resource_type === "READING_MATERIAL" && activeResource.details && (
                       <div className="space-y-6">
                         <h1 className="text-xl font-extrabold text-foreground pb-2 border-b border-border/50">
@@ -1135,7 +1344,6 @@ export const CourseViewer: React.FC = () => {
                         </h1>
 
                         {(activeResource.details.content || []).map((block: any, idx: number) => {
-                          // ─── READING block: markdown + inline HTML ───
                           if (block.type === "READING" && block.data) {
                             return (
                               <div
@@ -1214,12 +1422,10 @@ export const CourseViewer: React.FC = () => {
                             );
                           }
 
-                          // ─── MCQ block (inline within reading material) ─── Fix 2
                           if (block.type === "MCQ" && block.data) {
                             return <InlineMcqCard key={idx} mcq={block.data} />;
                           }
 
-                          // ─── CODE block ───
                           if (block.type === "CODE" && block.data) {
                             return (
                               <InlineCodeEditor
@@ -1231,7 +1437,6 @@ export const CourseViewer: React.FC = () => {
                             );
                           }
 
-                          // ─── VIDEO block (embedded) ───
                           if (block.type === "VIDEO" && block.data?.details) {
                             return (
                               <div key={idx} className="my-4">
@@ -1240,7 +1445,6 @@ export const CourseViewer: React.FC = () => {
                             );
                           }
 
-                          // ─── EXTERNAL block ───
                           if (block.type === "EXTERNAL" && block.data) {
                             const list = Array.isArray(block.data) ? block.data : [];
                             return (
@@ -1315,7 +1519,7 @@ export const CourseViewer: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Manual Completions Bottom Bar (non-coding resources only) */}
+                    {/* Manual Completions Bottom Bar */}
                     {activeResource.resource_type !== "CODING_PROBLEM" && (
                       <div className="pt-8 border-t border-border/50 flex justify-center">
                         <button
@@ -1342,7 +1546,7 @@ export const CourseViewer: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Option B: Inline Bottom Content Navigation Footer */}
+                    {/* Content Navigation Footer */}
                     {activeResource.resource_type !== "CODING_PROBLEM" && (prevResource || nextResource) && (
                       <div className="mt-8 pt-6 border-t border-border/50 grid grid-cols-2 gap-4">
                         <div>
@@ -1410,7 +1614,7 @@ export const CourseViewer: React.FC = () => {
           )}
         </div>
 
-        {/* ═══ Fix 4: Overlay Syllabus Drawer ═══ */}
+        {/* Overlay Syllabus Drawer */}
         <AnimatePresence>
           {syllabusOpen && (
             <>
@@ -1498,46 +1702,46 @@ export const CourseViewer: React.FC = () => {
                                             navigate(`/courses/${courseId}/resource/${res.resource_id}`);
                                             setSyllabusOpen(false);
                                           }}
-                                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-left text-xs transition-colors ${
-                                          isActive
-                                            ? "bg-primary/10 text-primary font-semibold"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                                        }`}
-                                      >
-                                        <div className="flex items-center gap-2 min-w-0 pr-2">
-                                          {getResourceIcon(res.resource_type)}
-                                          <span className="truncate">
-                                            {res.resource_name}
-                                          </span>
-                                        </div>
+                                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-left text-xs transition-colors ${
+                                            isActive
+                                              ? "bg-primary/10 text-primary font-semibold"
+                                              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-2 min-w-0 pr-2">
+                                            {getResourceIcon(res.resource_type)}
+                                            <span className="truncate">
+                                              {res.resource_name}
+                                            </span>
+                                          </div>
 
-                                        {res.resource_type !== "CODING_PROBLEM" ? (
-                                          <span
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              toggleResourceCompletionById(res.resource_id, res.isCompleted);
-                                            }}
-                                            className="p-1 -mr-1 rounded hover:bg-muted/80 transition-colors cursor-pointer shrink-0 flex items-center justify-center"
-                                            title={res.isCompleted ? "Mark as Incomplete" : "Mark as Completed"}
-                                          >
-                                            {res.isCompleted ? (
-                                              <CheckCircle2 size={13} className="text-emerald-500 shrink-0" strokeWidth={3} />
-                                            ) : (
-                                              <Circle size={13} className="text-muted-foreground/30 hover:text-muted-foreground/70 shrink-0" />
-                                            )}
-                                          </span>
-                                        ) : (
-                                          <span className="p-1 -mr-1 shrink-0 select-none flex items-center justify-center opacity-60">
-                                            {res.isCompleted ? (
-                                              <CheckCircle2 size={13} className="text-emerald-500 shrink-0" strokeWidth={3} />
-                                            ) : (
-                                              <Circle size={13} className="text-muted-foreground/20 shrink-0" />
-                                            )}
-                                          </span>
-                                        )}
-                                      </button>
-                                    );
-                                  })}
+                                          {res.resource_type !== "CODING_PROBLEM" ? (
+                                            <span
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleResourceCompletionById(res.resource_id, res.isCompleted);
+                                              }}
+                                              className="p-1 -mr-1 rounded hover:bg-muted/80 transition-colors cursor-pointer shrink-0 flex items-center justify-center"
+                                              title={res.isCompleted ? "Mark as Incomplete" : "Mark as Completed"}
+                                            >
+                                              {res.isCompleted ? (
+                                                <CheckCircle2 size={13} className="text-emerald-500 shrink-0" strokeWidth={3} />
+                                              ) : (
+                                                <Circle size={13} className="text-muted-foreground/30 hover:text-muted-foreground/70 shrink-0" />
+                                              )}
+                                            </span>
+                                          ) : (
+                                            <span className="p-1 -mr-1 shrink-0 select-none flex items-center justify-center opacity-60">
+                                              {res.isCompleted ? (
+                                                <CheckCircle2 size={13} className="text-emerald-500 shrink-0" strokeWidth={3} />
+                                              ) : (
+                                                <Circle size={13} className="text-muted-foreground/20 shrink-0" />
+                                              )}
+                                            </span>
+                                          )}
+                                        </button>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               );
@@ -1554,12 +1758,20 @@ export const CourseViewer: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* Compiler Interceptor Modal */}
-      <DownloadPromptModal
-        isOpen={isDownloadPromptOpen}
-        onClose={() => setIsDownloadPromptOpen(false)}
-      />
+      {/* Local code execution result modal */}
+      {codingProblem && (
+        <SubmissionResultModal
+          isOpen={isResultModalOpen}
+          onClose={() => setIsResultModalOpen(false)}
+          status={submissionResult?.status || ""}
+          language={editorLang}
+          executionTimeMs={submissionResult?.executionTimeMs || 0}
+          sampleResults={submissionResult?.sampleResults || []}
+          samples={codingProblem.samples}
+        />
+      )}
     </div>
   );
 };
+
 export default CourseViewer;
