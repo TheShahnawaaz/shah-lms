@@ -10,7 +10,6 @@ import {
   Eye,
   EyeOff,
   Search,
-  Calendar,
   Clock,
   Settings,
   Plus
@@ -60,7 +59,6 @@ export const CourseImporter: React.FC = () => {
 
   // --- Course Import State ---
   const [dragActive, setDragActive] = useState<boolean>(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [courseData, setCourseData] = useState<any | null>(null);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -189,7 +187,6 @@ export const CourseImporter: React.FC = () => {
   };
 
   const handleFile = async (file: File) => {
-    setSelectedFile(file);
     setValidation(null);
     setCourseData(null);
     setSyncOutcome(null);
