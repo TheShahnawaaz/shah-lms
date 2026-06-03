@@ -2,6 +2,11 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.1.9] - 2026-06-04
+
+### Fixed
+- Proxied YouTube embeds inside Tauri desktop apps via `lms.theshahnawaz.in/youtube-embed` to prevent Error 153 configuration/referrer blocks.
+
 ## [0.1.8] - 2026-06-04
 
 ### Added
