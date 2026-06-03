@@ -173,8 +173,7 @@ export const CoursesDashboard: React.FC = () => {
         )}
       </motion.div>
     );
-
-
+  };
 
   if (loading) {
     return (
