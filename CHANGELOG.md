@@ -2,6 +2,13 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.1.7] - 2026-06-03
+
+### Fixed
+- Resolved Course Ingestion `Unique constraint failed` error on combined Graph/DP courses by implementing deterministic prefix ID mapping.
+- Whitelisted legacy courses to preserve student completions and history.
+- Bundled external platform SVG logos (LeetCode, Codeforces, AtCoder, CodeChef, SPOJ, HackerEarth) natively into the desktop app asset bundle.
+
 ## [0.1.6] - 2026-06-03
 
 ### Added
