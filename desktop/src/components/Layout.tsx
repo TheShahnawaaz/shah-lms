@@ -115,7 +115,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullWidth = false }) =
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Sticky Header - Hides on fullWidth mode */}
         {!fullWidth && (
-          <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
+          <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
             <div className="flex items-center gap-3 min-w-0">
               {/* Hamburger menu for mobile */}
               <button

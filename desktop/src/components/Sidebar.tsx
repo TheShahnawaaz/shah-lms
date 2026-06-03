@@ -135,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       } ${isCollapsed && !isMobile ? "lg:cursor-pointer" : ""}`}
     >
       {/* Sidebar Header / Branding */}
-      <div className="flex items-center justify-between p-4 h-16 border-b border-border">
+      <div className="flex items-center justify-between p-4 h-14 border-b border-border">
         {!isCollapsed || isMobile ? (
           <>
             <Link
