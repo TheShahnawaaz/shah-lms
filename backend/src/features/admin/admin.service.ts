@@ -292,9 +292,16 @@ export class AdminService {
       });
 
       // Insert Chapters, Playlists, and Resources
+      const isLegacyCourse = [203, 151, 144, 85].includes(courseId);
+      const mapId = (originalId: number) => {
+        if (isLegacyCourse) return originalId;
+        return courseId * 100000 + originalId;
+      };
+
       for (const chapter of coursePayload.chapters || []) {
-        const chapterId = parseInt(chapter.chapter_id);
-        if (isNaN(chapterId)) continue;
+        const originalChapterId = parseInt(chapter.chapter_id);
+        if (isNaN(originalChapterId)) continue;
+        const chapterId = mapId(originalChapterId);
 
         await tx.chapter.create({
           data: {
@@ -306,8 +313,9 @@ export class AdminService {
         });
 
         for (const playlist of chapter.playlists || []) {
-          const playlistId = parseInt(playlist.playlist_id);
-          if (isNaN(playlistId)) continue;
+          const originalPlaylistId = parseInt(playlist.playlist_id);
+          if (isNaN(originalPlaylistId)) continue;
+          const playlistId = mapId(originalPlaylistId);
 
           await tx.playlist.create({
             data: {
@@ -319,8 +327,9 @@ export class AdminService {
           });
 
           for (const res of playlist.resources || []) {
-            const resId = parseInt(res.resource_id);
-            if (isNaN(resId)) continue;
+            const originalResId = parseInt(res.resource_id);
+            if (isNaN(originalResId)) continue;
+            const resId = mapId(originalResId);
 
             const resType = res.resource_type || "READING_MATERIAL";
             let problemId: number | null = null;
