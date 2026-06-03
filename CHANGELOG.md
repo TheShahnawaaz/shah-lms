@@ -2,6 +2,11 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.1.8] - 2026-06-04
+
+### Added
+- Enabled window zooming support (zooming in/out with standard shortcuts Ctrl/Cmd + '+' and Ctrl/Cmd + '-') natively in the desktop app.
+
 ## [0.1.7] - 2026-06-03
 
 ### Fixed

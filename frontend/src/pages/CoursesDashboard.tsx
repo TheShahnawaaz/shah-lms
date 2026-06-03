@@ -54,6 +54,9 @@ export const CoursesDashboard: React.FC = () => {
     return matchesSearch && matchesFilter;
   });
 
+  const inProgressCourses = filteredCourses.filter((course) => course.completedCount > 0);
+  const notStartedCourses = filteredCourses.filter((course) => course.completedCount === 0);
+
   const formatDuration = (mins: number) => {
     if (!mins) return "Self-paced";
     const hrs = Math.floor(mins / 60);
@@ -61,6 +64,117 @@ export const CoursesDashboard: React.FC = () => {
     if (hrs === 0) return `${remainingMins}m`;
     return remainingMins > 0 ? `${hrs}h ${remainingMins}m` : `${hrs}h`;
   };
+
+  const renderCourseCard = (course: Course) => {
+    const hasStarted = course.completedCount > 0;
+    const isCompleted = course.completionPercentage === 100;
+
+    return (
+      <motion.div
+        key={course.id}
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+        onClick={() => navigate(`/courses/${course.id}`)}
+        className="group cursor-pointer relative flex flex-col overflow-hidden bg-card hover:bg-card/75 border border-border/80 hover:border-primary/30 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md glass-card pb-1"
+      >
+        {/* Background Glow Effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+        {/* Top Image Banner (16:9 Aspect Ratio) */}
+        <div className="aspect-video w-full overflow-hidden bg-muted border-b border-border/50 relative">
+          {course.image ? (
+            <img src={course.image} alt={course.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          ) : (
+            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 text-muted-foreground">
+              <BookOpen size={36} className="opacity-50" />
+            </div>
+          )}
+
+          {/* Difficulty & Price Badges (Floating on top of image) */}
+          <div className="absolute top-3 right-3 flex gap-1.5 z-10">
+            {course.difficulty && (
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border capitalize shadow-sm backdrop-blur-md ${
+                course.difficulty.toLowerCase() === "beginner"
+                  ? "bg-emerald-500/80 text-white border-emerald-500/25"
+                  : course.difficulty.toLowerCase() === "intermediate"
+                  ? "bg-amber-500/80 text-white border-amber-500/25"
+                  : "bg-rose-500/80 text-white border-rose-500/25"
+              }`}>
+                {course.difficulty}
+              </span>
+            )}
+            {course.isFree && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/80 text-white dark:text-black border border-primary/20 shadow-sm backdrop-blur-md">
+                Free
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Course Card Body */}
+        <div className="p-5 flex flex-col gap-4 flex-grow">
+          {/* Info */}
+          <div className="space-y-1.5 flex-1 flex flex-col">
+            <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
+              {course.name}
+            </h3>
+            <p className="text-xs text-foreground/80 line-clamp-2 leading-relaxed flex-1">
+              {course.description || "Learn and master data structures, algorithms, and logical problem solving."}
+            </p>
+          </div>
+
+          {/* Specs row */}
+          <div className="flex items-center gap-4 text-foreground/75 text-xs font-semibold py-1 border-t border-border/40">
+            {course.timeInMinutes > 0 && (
+              <div className="flex items-center gap-1">
+                <Clock size={14} />
+                <span>{formatDuration(course.timeInMinutes)}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1">
+              <Award size={14} />
+              <span>{course.totalResources} resources</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Row */}
+        <div className="bg-muted/10 px-5 py-3.5 border-t border-border/50 rounded-b-2xl flex items-center justify-between relative">
+          {hasStarted ? (
+            <span className={`text-xs font-bold ${isCompleted ? "text-emerald-500" : "text-primary"}`}>
+              {course.completionPercentage}% Complete {isCompleted && "✅"}
+            </span>
+          ) : (
+            <span className="text-xs font-bold text-primary group-hover:underline flex items-center gap-1">
+              Start Learning →
+            </span>
+          )}
+
+          {course.instructorName && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-semibold">
+              {course.instructorImage && (
+                <img src={course.instructorImage} alt={course.instructorName} className="h-3.5 w-3.5 rounded-full border border-border" />
+              )}
+              <span>{course.instructorName}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Thin progress bar stuck to the very bottom of the card */}
+        {hasStarted && (
+          <div className="absolute bottom-0 left-0 right-0 h-[6px] bg-border/20 overflow-hidden">
+            <div
+              className={`h-full transition-all duration-500 ${
+                isCompleted ? "bg-emerald-500" : "bg-primary"
+              }`}
+              style={{ width: `${course.completionPercentage}%` }}
+            />
+          </div>
+        )}
+      </motion.div>
+    );
+
+
 
   if (loading) {
     return (
@@ -141,7 +255,7 @@ export const CoursesDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Course Grid */}
+      {/* Course Sections */}
       {filteredCourses.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border rounded-2xl bg-card/20">
           <BookOpen className="text-muted-foreground mb-4" size={32} />
@@ -151,114 +265,31 @@ export const CoursesDashboard: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => {
-            const hasStarted = course.completedCount > 0;
-            const isCompleted = course.completionPercentage === 100;
-            
-            return (
-              <motion.div
-                key={course.id}
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => navigate(`/courses/${course.id}`)}
-                className="group cursor-pointer relative flex flex-col overflow-hidden bg-card hover:bg-card/75 border border-border/80 hover:border-primary/30 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md glass-card"
-              >
-                {/* Background Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        <div className="space-y-10">
+          {inProgressCourses.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2 border-b border-border/60 pb-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+                In Progress
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {inProgressCourses.map(renderCourseCard)}
+              </div>
+            </div>
+          )}
 
-                {/* Top Image Banner (16:9 Aspect Ratio) */}
-                <div className="aspect-video w-full overflow-hidden bg-muted border-b border-border/50 relative">
-                  {course.image ? (
-                    <img src={course.image} alt={course.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 text-muted-foreground">
-                      <BookOpen size={36} className="opacity-50" />
-                    </div>
-                  )}
-
-                  {/* Difficulty & Price Badges (Floating on top of image) */}
-                  <div className="absolute top-3 right-3 flex gap-1.5 z-10">
-                    {course.difficulty && (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border capitalize shadow-sm backdrop-blur-md ${
-                        course.difficulty.toLowerCase() === "beginner"
-                          ? "bg-emerald-500/80 text-white border-emerald-500/25"
-                          : course.difficulty.toLowerCase() === "intermediate"
-                          ? "bg-amber-500/80 text-white border-amber-500/25"
-                          : "bg-rose-500/80 text-white border-rose-500/25"
-                      }`}>
-                        {course.difficulty}
-                      </span>
-                    )}
-                    {course.isFree && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/80 text-white dark:text-black border border-primary/20 shadow-sm backdrop-blur-md">
-                        Free
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Course Card Body */}
-                <div className="p-5 flex flex-col gap-4 flex-grow">
-                  {/* Info */}
-                  <div className="space-y-1.5 flex-1 flex flex-col">
-                    <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                      {course.name}
-                    </h3>
-                    <p className="text-xs text-foreground/80 line-clamp-2 leading-relaxed flex-1">
-                      {course.description || "Learn and master data structures, algorithms, and logical problem solving."}
-                    </p>
-                  </div>
-
-                  {/* Specs row */}
-                  <div className="flex items-center gap-4 text-foreground/75 text-xs font-semibold py-1 border-t border-border/40">
-                    {course.timeInMinutes > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Clock size={14} />
-                        <span>{formatDuration(course.timeInMinutes)}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1">
-                      <Award size={14} />
-                      <span>{course.totalResources} resources</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progress / Footer Row */}
-                <div className="bg-muted/40 p-4 border-t border-border/50 rounded-b-2xl flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-foreground">
-                    <span className={isCompleted ? "text-emerald-500" : hasStarted ? "text-primary" : "text-muted-foreground"}>
-                      {isCompleted ? "Completed ✅" : hasStarted ? "In Progress" : "Not Started"}
-                    </span>
-                    <span>{course.completionPercentage}%</span>
-                  </div>
-
-                  {/* Progress bar container */}
-                  <div className="h-2 w-full bg-border/40 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        isCompleted ? "bg-emerald-500" : "bg-primary"
-                      }`}
-                      style={{ width: `${course.completionPercentage}%` }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between mt-1 text-[10px] text-muted-foreground font-semibold">
-                    <span>{course.completedCount} of {course.totalResources} modules</span>
-                    {course.instructorName && (
-                      <div className="flex items-center gap-1.5">
-                        {course.instructorImage && (
-                          <img src={course.instructorImage} alt={course.instructorName} className="h-3.5 w-3.5 rounded-full border border-border" />
-                        )}
-                        <span>{course.instructorName}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+          {notStartedCourses.length > 0 && (
+            <div className="space-y-4">
+              {inProgressCourses.length > 0 && (
+                <h2 className="text-lg font-bold text-foreground border-b border-border/60 pb-2">
+                  Explore Courses
+                </h2>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {notStartedCourses.map(renderCourseCard)}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
