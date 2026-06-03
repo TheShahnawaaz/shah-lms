@@ -17,12 +17,17 @@ interface VideoPlayerProps {
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
   const isYoutube = video.type === "YOUTUBE" && video.youtubeLink;
+  const isTauri = typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__ !== undefined;
 
   if (isYoutube) {
+    const embedUrl = isTauri
+      ? `https://lms.theshahnawaz.in/youtube-embed/${video.youtubeLink}`
+      : `https://www.youtube-nocookie.com/embed/${video.youtubeLink}?autoplay=0&rel=0`;
+
     return (
       <div className="w-full aspect-video rounded-2xl overflow-hidden border border-border shadow-lg bg-black">
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${video.youtubeLink}?autoplay=0&rel=0`}
+          src={embedUrl}
           title={video.title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen

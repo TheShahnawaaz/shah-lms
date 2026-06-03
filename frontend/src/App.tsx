@@ -11,6 +11,7 @@ import SeedPage from "./pages/admin/SeedPage";
 import AllowedUsers from "./pages/admin/AllowedUsers";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CourseImporter from "./pages/admin/CourseImporter";
+import YoutubeEmbed from "./pages/YoutubeEmbed";
 import { Layout } from "./components/Layout";
 
 // Helper component for Route protection
@@ -28,6 +29,7 @@ export const App: React.FC = () => {
       <Routes>
         {/* Public Auth Routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/youtube-embed/:youtubeId" element={<YoutubeEmbed />} />
 
         {/* Private Routes */}
         <Route
