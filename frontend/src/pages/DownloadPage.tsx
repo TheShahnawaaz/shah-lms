@@ -12,15 +12,15 @@ interface ReleaseData {
 }
 
 export const DownloadPage: React.FC = () => {
-  const [version, setVersion] = useState<string>("v0.1.3");
+  const [version, setVersion] = useState<string>("v0.1.9");
   const [loading, setLoading] = useState<boolean>(true);
   const [detectedOS, setDetectedOS] = useState<"mac" | "windows" | "linux" | "unknown">("unknown");
   const [copiedCommand, setCopiedCommand] = useState<boolean>(false);
   
   const [downloads, setDownloads] = useState({
-    macArm: "https://github.com/TheShahnawaaz/shah-lms/releases/download/v0.1.3/shahlms_0.1.3_aarch64.dmg",
-    macIntel: "https://github.com/TheShahnawaaz/shah-lms/releases/download/v0.1.3/shahlms_0.1.3_x64.dmg",
-    windows: "https://github.com/TheShahnawaaz/shah-lms/releases/download/v0.1.3/shahlms_0.1.3_x64_en-US.msi"
+    macArm: "https://github.com/TheShahnawaaz/shah-lms/releases/download/v0.1.9/ShahLMS_0.1.9_aarch64.dmg",
+    macIntel: "https://github.com/TheShahnawaaz/shah-lms/releases/download/v0.1.9/ShahLMS_0.1.9_x64.dmg",
+    windows: "https://github.com/TheShahnawaaz/shah-lms/releases/download/v0.1.9/ShahLMS_0.1.9_x64-setup.exe"
   });
 
   useEffect(() => {
@@ -55,16 +55,16 @@ export const DownloadPage: React.FC = () => {
             } else {
               macIntel = url;
             }
-          } else if (name.endsWith(".msi")) {
+          } else if (name.endsWith(".msi") || name.endsWith(".exe")) {
             win = url;
           }
         });
 
         const cleanVersion = data.tag_name.replace("v", "");
         setDownloads({
-          macArm: macArm || `https://github.com/TheShahnawaaz/shah-lms/releases/download/${data.tag_name}/shahlms_${cleanVersion}_aarch64.dmg`,
-          macIntel: macIntel || `https://github.com/TheShahnawaaz/shah-lms/releases/download/${data.tag_name}/shahlms_${cleanVersion}_x64.dmg`,
-          windows: win || `https://github.com/TheShahnawaaz/shah-lms/releases/download/${data.tag_name}/shahlms_${cleanVersion}_x64_en-US.msi`
+          macArm: macArm || `https://github.com/TheShahnawaaz/shah-lms/releases/download/${data.tag_name}/ShahLMS_${cleanVersion}_aarch64.dmg`,
+          macIntel: macIntel || `https://github.com/TheShahnawaaz/shah-lms/releases/download/${data.tag_name}/ShahLMS_${cleanVersion}_x64.dmg`,
+          windows: win || `https://github.com/TheShahnawaaz/shah-lms/releases/download/${data.tag_name}/ShahLMS_${cleanVersion}_x64-setup.exe`
         });
       } catch (err) {
         console.error("Failed to load releases from Github API, using fallbacks:", err);
