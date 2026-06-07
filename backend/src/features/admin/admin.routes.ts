@@ -334,4 +334,29 @@ router.delete(
   }
 );
 
+// POST impersonate a user
+router.post(
+  "/impersonate/:id",
+  authMiddleware,
+  adminMiddleware,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+
+    try {
+      const result = await AdminService.impersonateUser(id);
+      return res.status(200).json({
+        code: 200,
+        details: "Impersonation token generated.",
+        data: result
+      });
+    } catch (err: any) {
+      return res.status(400).json({
+        code: 400,
+        details: err.message || "Failed to impersonate user.",
+        data: null
+      });
+    }
+  }
+);
+
 export default router;

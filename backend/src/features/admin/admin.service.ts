@@ -1,5 +1,6 @@
 import prisma from "../../config/db";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 
 interface SeedResult {
   created: number;
@@ -453,6 +454,36 @@ export class AdminService {
     return prisma.course.delete({
       where: { id: courseId }
     });
+  }
+
+  static async impersonateUser(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profilePictureUrl: true,
+        isAdmin: true
+      }
+    });
+
+    if (!user) {
+      throw new Error("User not found.");
+    }
+
+    const jwtSecret = process.env.JWT_SECRET || "az_practice_secret_jwt_key_987654321";
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, isAdmin: user.isAdmin },
+      jwtSecret,
+      { expiresIn: "7d" }
+    );
+
+    return {
+      token,
+      user
+    };
   }
 }
 export default AdminService;

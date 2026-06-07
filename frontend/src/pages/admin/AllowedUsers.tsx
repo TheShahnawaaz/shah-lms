@@ -8,7 +8,9 @@ import {
   UserCheck,
   AlertTriangle,
   Search,
-  Info
+  Info,
+  Eye,
+  X
 } from "lucide-react";
 
 interface AllowedUser {
@@ -50,10 +52,63 @@ export const AllowedUsers: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
+  // Impersonation modal state
+  const [impersonateTarget, setImpersonateTarget] = useState<{ id: string; email: string } | null>(null);
+
   // Self reference to prevent deleting oneself
   const token = localStorage.getItem("az_auth_token");
   const payload = token ? parseJwt(token) : null;
   const currentAdminId = payload?.id || "";
+
+  const handleImpersonate = (targetUserId: string, targetUserEmail: string) => {
+    if (targetUserId === currentAdminId) {
+      alert("Error: You cannot impersonate yourself!");
+      return;
+    }
+    setImpersonateTarget({ id: targetUserId, email: targetUserEmail });
+  };
+
+  const executeImpersonate = async (targetUserId: string, targetUserEmail: string) => {
+    try {
+      const res = await api.post<{
+        token: string;
+        user: { id: string; name: string | null; email: string; profilePictureUrl: string | null; isAdmin: boolean };
+      }>(`/admin/impersonate/${targetUserId}`);
+
+      const adminToken = localStorage.getItem("az_auth_token") || "";
+      const adminName = localStorage.getItem("az_user_name") || "";
+      const adminEmail = localStorage.getItem("az_user_email") || "";
+      const adminAvatar = localStorage.getItem("az_user_avatar") || "";
+
+      // Backup admin credentials
+      localStorage.setItem("az_admin_token", adminToken);
+      localStorage.setItem("az_admin_name", adminName);
+      localStorage.setItem("az_admin_email", adminEmail);
+      if (adminAvatar) {
+        localStorage.setItem("az_admin_avatar", adminAvatar);
+      } else {
+        localStorage.removeItem("az_admin_avatar");
+      }
+
+      // Set impersonation flag
+      localStorage.setItem("az_impersonated", "true");
+
+      // Set target user credentials as active
+      api.setToken(res.data.token);
+      localStorage.setItem("az_user_name", res.data.user.name || "Coder");
+      localStorage.setItem("az_user_email", res.data.user.email || "");
+      if (res.data.user.profilePictureUrl) {
+        localStorage.setItem("az_user_avatar", res.data.user.profilePictureUrl);
+      } else {
+        localStorage.removeItem("az_user_avatar");
+      }
+
+      // Force page refresh and redirect to dashboard
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      alert(err.message || `Failed to impersonate ${targetUserEmail}.`);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -349,22 +404,36 @@ export const AllowedUsers: React.FC = () => {
                           </td>
 
                           {/* Revoke Action */}
-                          <td className="py-3.5 px-4 text-right">
-                            <button
-                              onClick={() => handleDeleteUser(user.id, user.email)}
-                              disabled={isSelf}
-                              className={`p-1.5 rounded-lg border border-border/80 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors ${
-                                isSelf ? "opacity-30 cursor-not-allowed" : ""
-                              }`}
-                              title={
-                                isSelf
-                                  ? "Self-deletion disabled"
-                                  : `Revoke access for ${user.email}`
-                              }
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </td>
+                          <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
+                             <button
+                               onClick={() => handleImpersonate(user.id, user.email)}
+                               disabled={isSelf}
+                               className={`p-1.5 rounded-lg border border-border/80 hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors ${
+                                 isSelf ? "opacity-30 cursor-not-allowed" : ""
+                               }`}
+                               title={
+                                 isSelf
+                                   ? "Cannot impersonate self"
+                                   : `Impersonate ${user.email}`
+                               }
+                             >
+                               <Eye size={13} />
+                             </button>
+                             <button
+                               onClick={() => handleDeleteUser(user.id, user.email)}
+                               disabled={isSelf}
+                               className={`p-1.5 rounded-lg border border-border/80 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors ${
+                                 isSelf ? "opacity-30 cursor-not-allowed" : ""
+                               }`}
+                               title={
+                                 isSelf
+                                   ? "Self-deletion disabled"
+                                   : `Revoke access for ${user.email}`
+                               }
+                             >
+                               <Trash2 size={13} />
+                             </button>
+                           </td>
                         </tr>
                       );
                     })}
@@ -375,6 +444,80 @@ export const AllowedUsers: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Impersonation Confirmation Modal */}
+      {impersonateTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop overlay */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" 
+            onClick={() => setImpersonateTarget(null)} 
+          />
+
+          {/* Modal Dialog Card */}
+          <div className="relative bg-card border border-border rounded-xl shadow-2xl w-full max-w-md z-10 flex flex-col text-foreground overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            {/* Header */}
+            <div className="flex justify-between items-center px-5 py-4 border-b border-border bg-muted/20">
+              <div className="flex items-center gap-2 text-amber-500">
+                <Shield className="size-4" />
+                <span className="font-bold text-xs uppercase tracking-wider">Impersonation Confirm</span>
+              </div>
+              <button
+                onClick={() => setImpersonateTarget(null)}
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 text-center space-y-4">
+              <div className="mx-auto w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500 mb-2">
+                <Eye className="size-6 animate-pulse" />
+              </div>
+
+              <h3 className="text-base font-bold tracking-tight">
+                Enter Impersonation Mode?
+              </h3>
+              
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Are you sure you want to impersonate <strong>{impersonateTarget.email}</strong>? You will temporarily see their dashboard, courses, and account content.
+              </p>
+
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 text-left">
+                <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-wide">Key Points:</h4>
+                <ul className="text-[10.5px] text-muted-foreground mt-1.5 list-disc list-inside space-y-1">
+                  <li>You can exit anytime using the top warning banner.</li>
+                  <li>All progress and completions viewed are live from database.</li>
+                  <li>Admin views are hidden during active impersonation.</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-border bg-muted/10 flex gap-2.5 justify-end">
+              <button
+                onClick={() => setImpersonateTarget(null)}
+                className="py-1.5 px-4 bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs rounded-lg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const target = impersonateTarget;
+                  setImpersonateTarget(null);
+                  executeImpersonate(target.id, target.email);
+                }}
+                className="py-1.5 px-4 bg-amber-500 text-amber-950 font-bold text-xs rounded-lg hover:bg-amber-400 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <span>Confirm Impersonate</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -127,7 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       animate={{ width: isMobile ? 240 : isCollapsed ? 68 : 240 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
       onClick={handleSidebarClick}
-      className={`fixed inset-y-0 left-0 lg:static z-50 lg:z-30 h-screen bg-card border-r border-border flex flex-col flex-shrink-0 select-none transition-transform lg:transition-none duration-300 lg:transform-none ${
+      className={`fixed inset-y-0 left-0 lg:static z-50 lg:z-30 h-full bg-card border-r border-border flex flex-col flex-shrink-0 select-none transition-transform lg:transition-none duration-300 lg:transform-none ${
         mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       } ${isCollapsed && !isMobile ? "lg:cursor-pointer" : ""}`}
     >
