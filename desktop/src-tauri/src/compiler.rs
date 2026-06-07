@@ -672,8 +672,8 @@ fn execute_process(
         false
     };
 
-    let stdout_str = String::from_utf8_lossy(&output.stdout).to_string();
-    let stderr_str = String::from_utf8_lossy(&output.stderr).to_string();
+    let stdout_str = String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n");
+    let stderr_str = String::from_utf8_lossy(&output.stderr).replace("\r\n", "\n");
 
     let status = if timed_out {
         "TimeLimitExceeded".to_string()

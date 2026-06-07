@@ -40,6 +40,10 @@ import ConsoleRunner from "../components/problems/ConsoleRunner";
 import SubmissionResultModal from "../components/problems/SubmissionResultModal";
 import { invoke } from "@tauri-apps/api/core";
 
+const normalizeOutput = (val: string) => {
+  return (val || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+};
+
 interface Resource {
   resource_id: number;
   resource_name: string;
@@ -916,7 +920,7 @@ export const CourseViewer: React.FC = () => {
           output = `Runtime Error (Exit Code: ${res.exit_code ?? "?"})\n${res.stderr || "Process crashed."}`;
         } else {
           output = res.stdout || "(No output)";
-          passed = res.stdout.trim() === sample.output.trim();
+          passed = normalizeOutput(res.stdout) === normalizeOutput(sample.output);
         }
 
         results[i] = { output, passed, status: res.status };
@@ -967,7 +971,7 @@ export const CourseViewer: React.FC = () => {
           output = res.stderr || "Process crashed.";
         } else {
           output = res.stdout || "";
-          passed = res.stdout.trim() === sample.output.trim();
+          passed = normalizeOutput(res.stdout) === normalizeOutput(sample.output);
         }
 
         results[i] = {

@@ -2,6 +2,17 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.2.1] - 2026-06-07
+
+### Fixed
+- Normalized compilation process stdout and stderr line endings to Unix style (`\n`) on both the Rust Tauri backend and TSX React frontend. This resolves validation issues on Windows devices where difference in line endings (`\r\n` vs `\n`) caused correct user solutions to be marked as "Failed".
+
+## [0.2.0] - 2026-06-07
+
+### Added
+- Implemented secure administrative User Impersonation ("Login As") feature allowing admin accounts to temporarily login as any user to inspect dashboard, courses, and bookmarks.
+- Restored layout sidebar height limits to `h-full` to prevent bottom controls clipping.
+
 ## [0.1.9] - 2026-06-04
 
 ### Fixed

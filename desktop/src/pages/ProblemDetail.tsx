@@ -64,6 +64,10 @@ function parseJwt(token: string) {
   }
 }
 
+const normalizeOutput = (val: string) => {
+  return (val || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+};
+
 export const ProblemDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [problem, setProblem] = useState<ProblemDetailData | null>(null);
@@ -419,7 +423,7 @@ export const ProblemDetail: React.FC = () => {
           output = `Runtime Error (Exit Code: ${res.exit_code ?? "?"})\n${res.stderr || "Process crashed."}`;
         } else {
           output = res.stdout || "(No output)";
-          passed = res.stdout.trim() === sample.output.trim();
+          passed = normalizeOutput(res.stdout) === normalizeOutput(sample.output);
         }
 
         results[i] = { output, passed, status: res.status };
@@ -472,7 +476,7 @@ export const ProblemDetail: React.FC = () => {
           output = res.stderr || "Process crashed.";
         } else {
           output = res.stdout || "";
-          passed = res.stdout.trim() === sample.output.trim();
+          passed = normalizeOutput(res.stdout) === normalizeOutput(sample.output);
         }
 
         results[i] = {
