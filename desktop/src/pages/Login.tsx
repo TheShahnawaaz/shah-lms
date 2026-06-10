@@ -135,9 +135,11 @@ export const Login: React.FC = () => {
         {/* Header - Logo and Theme Toggle */}
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold text-lg select-none">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground border border-border">
-              S
-            </div>
+            <img
+              src="/logo.png"
+              alt="ShahLMS Logo"
+              className="size-7 rounded-lg object-cover border border-border"
+            />
             <span>ShahLMS</span>
           </Link>
 
@@ -294,9 +296,11 @@ export const Login: React.FC = () => {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border border-border/50" />
 
             <div className="relative w-32 h-32 rounded-full border-2 border-border bg-card flex items-center justify-center shadow-lg backdrop-blur-xl">
-              <div className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-black text-3xl shadow-md border border-border">
-                S
-              </div>
+              <img
+                src="/logo.png"
+                alt="ShahLMS Logo"
+                className="w-16 h-16 rounded-2xl object-cover shadow-md border border-border"
+              />
             </div>
           </div>
         </div>

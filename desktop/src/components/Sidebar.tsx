@@ -144,9 +144,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="flex items-center gap-2 min-w-0"
             >
               {/* Custom geometric logo badge */}
-              <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-base flex-shrink-0 shadow-sm border border-border">
-                S
-              </div>
+              <img
+                src="/logo.png"
+                alt="ShahLMS Logo"
+                className="w-7 h-7 rounded-lg object-cover flex-shrink-0 shadow-sm border border-border"
+              />
               <div className="flex flex-col text-left leading-none min-w-0">
                 <span className="font-bold text-sm text-foreground truncate">ShahLMS</span>
                 <span className="text-[10px] text-muted-foreground font-medium truncate">
@@ -191,9 +193,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <ChevronRight size={16} />
               </div>
             ) : (
-              <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-base shadow-sm border border-border transition-all duration-150">
-                S
-              </div>
+              <img
+                src="/logo.png"
+                alt="ShahLMS Logo"
+                className="w-7 h-7 rounded-lg object-cover shadow-sm border border-border transition-all duration-150"
+              />
             )}
           </div>
         )}
