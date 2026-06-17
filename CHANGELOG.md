@@ -2,6 +2,11 @@
 
 All notable changes to the **ShahLMS** project will be documented in this file.
 
+## [0.2.2] - 2026-06-17
+
+### Fixed
+- Fixed trailing whitespace verification bug in the desktop code runner. The local comparison function now trims trailing whitespaces line-by-line, preventing correct C++ and Java solutions with trailing spaces from being incorrectly marked as "Failed" on sample tests.
+
 ## [0.2.1] - 2026-06-07
 
 ### Fixed

@@ -39,10 +39,7 @@ import CodeEditorPanel from "../components/problems/CodeEditorPanel";
 import ConsoleRunner from "../components/problems/ConsoleRunner";
 import SubmissionResultModal from "../components/problems/SubmissionResultModal";
 import { invoke } from "@tauri-apps/api/core";
-
-const normalizeOutput = (val: string) => {
-  return (val || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-};
+import { normalizeOutput } from "../lib/utils";
 
 interface Resource {
   resource_id: number;

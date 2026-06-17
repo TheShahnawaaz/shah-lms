@@ -8,6 +8,8 @@ import CodeEditorPanel from "../components/problems/CodeEditorPanel";
 import ConsoleRunner from "../components/problems/ConsoleRunner";
 import { invoke } from "@tauri-apps/api/core";
 import SubmissionResultModal from "../components/problems/SubmissionResultModal";
+import { normalizeOutput } from "../lib/utils";
+
 
 interface Sample {
   input: string;
@@ -64,9 +66,7 @@ function parseJwt(token: string) {
   }
 }
 
-const normalizeOutput = (val: string) => {
-  return (val || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-};
+
 
 export const ProblemDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
